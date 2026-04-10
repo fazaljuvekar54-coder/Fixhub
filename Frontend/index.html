@@ -2539,53 +2539,63 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyD8iBxy_TztsyDI0YH_j0-Zpn_mufw_BNY",
-      authDomain: "fixhub-2411.firebaseapp.com",
-      projectId: "fixhub-2411",
-      storageBucket: "fixhub-2411.firebasestorage.app",
-      messagingSenderId: "122871478979",
-      appId: "1:122871478979:web:5e4d1920c8dc47dcfe0076"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-    const storage = firebase.storage();
-    const googleProvider = new firebase.auth.GoogleAuthProvider();
+    let auth, db, storage, googleProvider;
 
-    // Initialize Email Service
-    if (window.EmailService) window.EmailService.init();
+    async function initializeFirebase() {
+      try {
+        const response = await fetch('/firebase-config.json');
+        if (!response.ok) throw new Error('Firebase config not found.');
+        const firebaseConfig = await response.json();
+        firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+        db = firebase.firestore();
+        storage = firebase.storage();
+        googleProvider = new firebase.auth.GoogleAuthProvider();
+
+        // Initialize Email Service
+        if (window.EmailService) window.EmailService.init();
+      } catch (error) {
+        console.error('Unable to initialize Firebase:', error);
+        showToast('Firebase configuration is missing. Add firebase-config.json to continue.');
+      }
+    }
 
     let currentUser = null, currentRole = null, isSignUp = false, selectedSignUpRole = 'user';;
 
-    auth.onAuthStateChanged(async user => {
-      hideLoading();
-      if (user && !user.isAnonymous) {
-        try {
-          const userDoc = await db.collection('users').doc(user.uid).get();
-          const userData = userDoc.data();
-          
-          if (userData && userData.suspended) {
-            showToast('Account suspended. Contact support.');
-            setTimeout(() => auth.signOut(), 1500);
-            return;
-          }
+    initializeFirebase().then(() => {
+      auth.onAuthStateChanged(async user => {
+        hideLoading();
+        if (user && !user.isAnonymous) {
+          try {
+            const userDoc = await db.collection('users').doc(user.uid).get();
+            const userData = userDoc.data();
+            
+            if (userData && userData.suspended) {
+              showToast('Account suspended. Contact support.');
+              setTimeout(() => auth.signOut(), 1500);
+              return;
+            }
 
-          currentUser = user;
-          const role = userData ? (userData.role || 'user') : 'user';
-          currentRole = role;
-          localStorage.setItem('fh_role_' + user.uid, role);
-          
-          if (role === 'worker') showWorkerDash();
-          else showUserDash();
-        } catch (e) {
-          console.error("Auth sync error:", e);
-          showUserDash(); // Fallback
+            currentUser = user;
+            const role = userData ? (userData.role || 'user') : 'user';
+            currentRole = role;
+            localStorage.setItem('fh_role_' + user.uid, role);
+            
+            if (role === 'worker') showWorkerDash();
+            else showUserDash();
+          } catch (e) {
+            console.error("Auth sync error:", e);
+            showUserDash(); // Fallback
+          }
+        } else {
+          currentUser = null; currentRole = null;
+          showPage('page-landing');
         }
-      } else {
-        currentUser = null; currentRole = null;
-        showPage('page-landing');
-      }
+      });
+    }).catch(error => {
+      console.error('Firebase initialization failed:', error);
+      showToast('Firebase configuration failed to load.');
+      hideLoading();
     });
 
     async function getUserRole(uid) {
