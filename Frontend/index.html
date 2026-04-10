@@ -1,0 +1,3899 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>
+    (function () {
+      const t = localStorage.getItem('theme') || 'system';
+      if (t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js');
+        });
+      }
+    })();
+  </script>
+  <title>FixHub — Professional Home Services</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#18181b">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FixHub">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="description"
+    content="Book verified home service professionals instantly. Electrical, plumbing, HVAC, and more." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #ffffff;
+      --surface: #f7f7f8;
+      --surface2: #efefef;
+      --border: #e4e4e7;
+      --text: #09090b;
+      --text-2: #52525b;
+      --text-3: #a1a1aa;
+      --accent: #18181b;
+      --accent-fg: #ffffff;
+      --green: #16a34a;
+      --green-bg: #f0fdf4;
+      --yellow: #ca8a04;
+      --yellow-bg: #fefce8;
+      --red: #dc2626;
+      --red-bg: #fef2f2;
+      --blue: #2563eb;
+      --blue-bg: #eff6ff;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #09090b;
+      --surface: #18181b;
+      --surface2: #27272a;
+      --border: #27272a;
+      --text: #fafafa;
+      --text-2: #a1a1aa;
+      --text-3: #52525b;
+      --accent: #ffffff;
+      --accent-fg: #09090b;
+      --green-bg: rgba(22, 163, 74, 0.15);
+      --yellow-bg: rgba(202, 138, 4, 0.15);
+      --red-bg: rgba(220, 38, 38, 0.15);
+      --blue-bg: rgba(37, 99, 235, 0.15);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 99px;
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity .4s;
+    }
+
+    .loader {
+      width: 28px;
+      height: 28px;
+      border: 2px solid var(--border);
+      border-top-color: var(--text);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .page {
+      display: none;
+      min-height: 100vh;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg);
+      opacity: 0.95;
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+    }
+
+    .nav-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+    }
+
+    .logo {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .logo span {
+      color: var(--text-3);
+      font-weight: 400;
+    }
+
+    .nav-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .theme-toggle {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      color: var(--text-2);
+      transition: all 0.2s;
+    }
+
+    .theme-toggle:hover {
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .theme-toggle .icon-sun {
+      display: none;
+    }
+
+    .theme-toggle .icon-moon {
+      display: block;
+    }
+
+    [data-theme="dark"] .theme-toggle .icon-sun {
+      display: block;
+    }
+
+    [data-theme="dark"] .theme-toggle .icon-moon {
+      display: none;
+    }
+
+    /* === MOBILE RESPONSIVE (768px and below) === */
+    @media (max-width: 768px) {
+      .nav {
+        padding: 0 12px;
+      }
+
+      .nav-inner {
+        height: 52px;
+      }
+
+      .logo {
+        font-size: 1rem;
+      }
+
+      .nav-actions {
+        gap: 6px;
+      }
+
+      /* Hide elements with mobile-hide class */
+      .mobile-hide {
+        display: none !important;
+      }
+
+      .nav-actions .btn {
+        padding: 6px 14px;
+        font-size: .8rem;
+      }
+
+      .theme-toggle {
+        display: flex;
+      }
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-size: .875rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all .15s;
+      text-decoration: none;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--accent-fg);
+      border-color: var(--accent);
+    }
+
+    .btn-primary:hover {
+      background: #27272a;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-2);
+      border-color: transparent;
+    }
+
+    .btn-ghost:hover {
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .btn-outline {
+      background: var(--bg);
+      color: var(--text);
+      border-color: var(--border);
+    }
+
+    .btn-outline:hover {
+      background: var(--surface);
+    }
+
+    .btn-google {
+      background: var(--bg);
+      color: var(--text);
+      border-color: var(--border);
+      width: 100%;
+      justify-content: center;
+      padding: 10px 16px;
+      font-size: .9rem;
+    }
+
+    .btn-google:hover {
+      background: var(--surface);
+    }
+
+    .btn-danger {
+      background: var(--red-bg);
+      color: var(--red);
+      border-color: #fecaca;
+    }
+
+    .btn-danger:hover {
+      background: #fee2e2;
+    }
+
+    .btn-full {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .btn-lg {
+      padding: 12px 24px;
+      font-size: 1rem;
+      border-radius: var(--radius);
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .4);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+      padding: 24px;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--bg);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      width: 100%;
+      max-width: 440px;
+      padding: 32px;
+      position: relative;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .12);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-3);
+      font-size: 1.2rem;
+      line-height: 1;
+      padding: 4px;
+      border-radius: 4px;
+    }
+
+    .modal-close:hover {
+      color: var(--text);
+      background: var(--surface);
+    }
+
+    .modal h2 {
+      font-size: 1.25rem;
+      margin-bottom: 4px;
+    }
+
+    .modal .sub {
+      color: var(--text-3);
+      font-size: .875rem;
+      margin-bottom: 24px;
+    }
+
+    .form-field {
+      margin-bottom: 16px;
+    }
+
+    .form-field label {
+      display: block;
+      font-size: .8rem;
+      font-weight: 500;
+      color: var(--text-2);
+      margin-bottom: 6px;
+    }
+
+    .form-field input,
+    .form-field select,
+    .form-field textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: .9rem;
+      font-family: inherit;
+      background: var(--bg);
+      color: var(--text);
+      outline: none;
+      transition: border .15s;
+    }
+
+    .form-field input:focus,
+    .form-field select:focus,
+    .form-field textarea:focus {
+      border-color: var(--text);
+    }
+
+    .form-field textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    /* Confirmation Screen Styles */
+    .confirmation-content {
+      text-align: center;
+      padding: 10px 0;
+    }
+
+    .success-icon-wrapper {
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .success-icon {
+      width: 64px;
+      height: 64px;
+      background: var(--green-bg);
+      color: var(--green);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      animation: scaleUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    @keyframes scaleUp {
+      from { transform: scale(0); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .booking-id-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-sm);
+      font-family: monospace;
+      font-weight: 600;
+      color: var(--text);
+      margin: 12px 0 24px;
+      font-size: 0.9rem;
+    }
+
+    .details-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+
+    .details-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-size: 0.875rem;
+    }
+
+    .details-row:last-child { margin-bottom: 0; }
+    .details-label { color: var(--text-3); font-weight: 400; }
+    .details-value { color: var(--text); font-weight: 500; }
+
+    /* Tracking Timeline */
+    .tracking-timeline { padding: 20px 0; display: flex; flex-direction: column; gap: 0; }
+    .tracking-step { display: flex; gap: 15px; position: relative; padding-bottom: 25px; }
+    .tracking-step:last-child { padding-bottom: 0; }
+    .tracking-step::after { content: ''; position: absolute; left: 15px; top: 30px; bottom: 0; width: 2px; background: #eee; z-index: 1; }
+    .tracking-step:last-child::after { display: none; }
+    .tracking-step.done::after { background: var(--green); }
+    .ts-icon { width: 32px; height: 32px; border-radius: 50%; background: white; border: 2px solid #eee; display: flex; align-items: center; justify-content: center; font-size: 14px; z-index: 2; flex-shrink: 0; transition: all 0.3s; }
+    .tracking-step.active .ts-icon { border-color: var(--blue); color: var(--blue); box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
+    .tracking-step.done .ts-icon { border-color: var(--green); background: var(--green); color: white; }
+    .ts-content { padding-top: 4px; }
+    .ts-title { font-weight: 600; font-size: 14px; color: var(--text-1); margin-bottom: 2px; }
+    .ts-desc { font-size: 12px; color: var(--text-3); }
+    .tracking-step.active .ts-title { color: var(--blue); }
+    
+    .btn-cancel { background: #fef2f2 !important; color: #dc2626 !important; border-color: #fca5a5 !important; }
+    .btn-cancel:hover { background: #fee2e2 !important; border-color: #f87171 !important; }
+    .btn-track { background: #eff6ff !important; color: var(--blue) !important; border-color: #bfdbfe !important; }
+    .btn-track:hover { background: #dbeafe !important; border-color: #93c5fd !important; }
+
+    /* Rescheduling Banner */
+    .reschedule-banner { background: #fffbeb; border-left: 4px solid #d97706; padding: 12px; border-radius: 8px; margin: 10px 0; display: flex; flex-direction: column; gap: 8px; }
+    .reschedule-banner .rb-title { font-weight: 600; color: #92400e; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+    .reschedule-banner .rb-time { font-family: monospace; font-size: 12px; background: #fef3c7; padding: 2px 6px; border-radius: 4px; display: inline-block; }
+    .status-rescheduling { border-left-color: #d97706 !important; }
+    .badge-rescheduling { background: #fef3c7; color: #92400e; }
+
+    .step-tracker {
+      margin: 24px 0;
+      text-align: left;
+      position: relative;
+      padding-left: 32px;
+    }
+
+    .step-tracker::before {
+      content: '';
+      position: absolute;
+      left: 7px;
+      top: 10px;
+      bottom: 10px;
+      width: 2px;
+      background: var(--border);
+    }
+
+    .step-item {
+      position: relative;
+      margin-bottom: 24px;
+    }
+
+    .step-item:last-child { margin-bottom: 0; }
+
+    .step-dot {
+      position: absolute;
+      left: -32px;
+      top: 4px;
+      width: 16px;
+      height: 16px;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: 50%;
+      z-index: 1;
+    }
+
+    .step-item.done .step-dot {
+      background: var(--green);
+      border-color: var(--green);
+    }
+
+    .step-item.pending .step-dot {
+      background: var(--bg);
+      border-color: var(--blue);
+      animation: pulseBlue 1.5s infinite;
+    }
+
+    @keyframes pulseBlue {
+      0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
+      70% { box-shadow: 0 0 0 6px rgba(37, 99, 235, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+    }
+
+    .step-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .step-sub {
+      font-size: 0.75rem;
+      color: var(--text-3);
+    }
+
+    .step-item.done .step-title { color: var(--text-2); }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text-3);
+      font-size: .8rem;
+      margin: 20px 0;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .hero {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 120px 24px 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    @media (max-width: 768px) {
+      .hero {
+        padding: 64px 20px 48px;
+      }
+
+      .hero h1 {
+        font-size: 2rem;
+        line-height: 1.2;
+      }
+
+      .hero p {
+        font-size: 1rem;
+        margin: 0 auto 24px;
+        max-width: 100%;
+      }
+
+      .hero-badge {
+        font-size: .75rem;
+        margin-bottom: 20px;
+      }
+
+      .hero-visual {
+        padding: 24px 16px;
+        border-radius: 16px;
+      }
+
+      .hero-actions {
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .stat-row {
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+
+      .service-pill {
+        display: inline-flex;
+        width: calc(50% - 4px);
+        margin-right: 4px;
+        margin-bottom: 4px;
+        padding: 10px;
+        font-size: .85rem;
+      }
+      
+      .service-pill:nth-child(even) {
+        margin-right: 0;
+      }
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: var(--surface);
+      border-radius: 99px;
+      font-size: .75rem;
+      font-weight: 600;
+      color: var(--text-2);
+      border: 1px solid var(--border);
+      margin-bottom: 24px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 4vw, 3rem);
+      line-height: 1.15;
+      font-weight: 700;
+      letter-spacing: -.03em;
+      margin-bottom: 16px;
+    }
+
+    .hero p {
+      color: var(--text-2);
+      font-size: 1.05rem;
+      margin-bottom: 32px;
+      max-width: 420px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 768px) {
+      .hero-actions {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .hero-actions .btn {
+        width: 100%;
+        justify-content: center;
+        padding: 12px 20px;
+      }
+    }
+
+    .badge-green {
+      background: var(--green-bg);
+      color: var(--green);
+    }
+
+    .badge-yellow {
+      background: var(--yellow-bg);
+      color: var(--yellow);
+    }
+
+    .badge-blue {
+      background: var(--blue-bg);
+      color: var(--blue);
+    }
+
+    .section {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 64px 24px;
+    }
+
+    .section-label {
+      font-size: .75rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text-3);
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .section-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      margin-bottom: 40px;
+    }
+
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    @media (max-width: 600px) {
+      .section {
+        padding: 48px 20px;
+      }
+
+      .section-label {
+        font-size: .7rem;
+      }
+
+      .section-title {
+        font-size: 1.5rem;
+        margin-bottom: 32px;
+      }
+
+      .services-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+
+      .service-item {
+        padding: 20px 16px;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+
+      .service-item .si-icon {
+        font-size: 1.5rem;
+        margin-bottom: 12px;
+      }
+
+      .service-item .si-name {
+        font-size: .9rem;
+      }
+
+      .service-item .si-desc {
+        font-size: .75rem;
+        line-height: 1.4;
+      }
+    }
+
+    .service-item {
+      padding: 24px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all .2s;
+      background: var(--bg);
+    }
+
+    .service-item:hover {
+      background: var(--surface);
+      border-color: var(--text-3);
+    }
+
+    .service-item .si-icon {
+      font-size: 1.5rem;
+      margin-bottom: 12px;
+    }
+
+    .service-item .si-name {
+      font-weight: 600;
+      font-size: .95rem;
+      margin-bottom: 4px;
+    }
+
+    .service-item .si-desc {
+      font-size: .8rem;
+      color: var(--text-3);
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+    }
+
+    @media (max-width: 640px) {
+      .steps {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+
+      .step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+
+      .step h3 {
+        font-size: 1.1rem;
+      }
+
+      .step p {
+        font-size: .9rem;
+        max-width: 280px;
+      }
+
+      .step-num {
+        width: 36px;
+        height: 36px;
+        font-size: .9rem;
+        margin-bottom: 16px;
+      }
+    }
+
+    .step-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--text);
+      color: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .8rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .step h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .step p {
+      font-size: .875rem;
+      color: var(--text-2);
+    }
+
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 24px;
+      text-align: center;
+      color: var(--text-3);
+      font-size: .8rem;
+    }
+
+    .dash-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      min-height: calc(100vh - 60px);
+    }
+
+    @media (max-width: 768px) {
+      .dash-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--border);
+      padding: 24px 16px;
+      background: var(--bg);
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        display: none;
+      }
+    }
+
+    .sidebar-user {
+      padding: 16px;
+      background: var(--surface);
+      border-radius: var(--radius-sm);
+      margin-bottom: 24px;
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--text);
+      color: var(--accent-fg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .9rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .user-name {
+      font-size: .875rem;
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .user-role {
+      font-size: .75rem;
+      color: var(--text-3);
+    }
+
+    .sidebar-nav {
+      list-style: none;
+    }
+
+    .sidebar-nav li {
+      margin-bottom: 2px;
+    }
+
+    .sidebar-nav a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: var(--radius-sm);
+      text-decoration: none;
+      font-size: .875rem;
+      font-weight: 500;
+      color: var(--text-2);
+      transition: all .15s;
+    }
+
+    .sidebar-nav a:hover,
+    .sidebar-nav a.active {
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .sidebar-nav a span {
+      font-size: 1rem;
+    }
+
+    .nav-badge {
+      margin-left: auto;
+      background: var(--red);
+      color: #fff;
+      font-size: .65rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 99px;
+      min-width: 18px;
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    /* Mobile Bottom Navigation */
+    .mobile-bottom-nav {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      .mobile-bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-top: 1px solid var(--border);
+        z-index: 1000;
+        justify-content: space-around;
+        padding: 8px 8px calc(10px + env(safe-area-inset-bottom));
+        box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
+      }
+
+      [data-theme="dark"] .mobile-bottom-nav {
+        background: rgba(9, 9, 11, 0.95);
+        box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.3);
+      }
+
+      .mobile-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-decoration: none;
+        color: var(--text-3);
+        font-size: .6rem;
+        font-weight: 600;
+        gap: 2px;
+        flex: 1;
+        transition: all 0.2s;
+        padding: 4px 2px;
+        border-radius: 8px;
+      }
+
+      .mobile-nav-item span {
+        font-size: 1.15rem;
+      }
+
+      .mobile-nav-item.active {
+        color: var(--text);
+        background: var(--surface);
+      }
+
+      .dash-main {
+        padding: 16px !important;
+        padding-bottom: calc(85px + env(safe-area-inset-bottom)) !important;
+      }
+
+      .dash-header h1 {
+        font-size: 1.25rem;
+      }
+
+      .dash-header p {
+        font-size: .8rem;
+      }
+
+      .stats-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .stat-box {
+        padding: 14px;
+      }
+
+      .stat-box .sb-value {
+        font-size: 1.4rem;
+      }
+
+      .stat-box .sb-label {
+        font-size: .68rem;
+      }
+
+      .card {
+        border-radius: 10px;
+        margin-bottom: 14px;
+      }
+
+      .card-header {
+        padding: 12px 14px;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .card-header h2 {
+        font-size: .9rem;
+      }
+
+      .card-header .btn {
+        font-size: .75rem;
+        padding: 6px 12px;
+      }
+
+      .job-item {
+        padding: 12px 14px;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .job-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+      }
+
+      .job-title {
+        font-size: .8rem;
+      }
+
+      .job-sub {
+        font-size: .7rem;
+      }
+
+      .badge {
+        font-size: .62rem;
+        padding: 2px 8px;
+      }
+
+      .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      table {
+        min-width: 500px;
+      }
+
+      /* Modal mobile improvements */
+      .modal {
+        padding: 24px 20px;
+        border-radius: 14px;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+
+      .modal-overlay {
+        padding: 12px;
+      }
+
+      .modal h2 {
+        font-size: 1.1rem;
+      }
+
+      .form-field input,
+      .form-field select,
+      .form-field textarea {
+        padding: 10px;
+        font-size: .85rem;
+      }
+
+      .form-field label {
+        font-size: .75rem;
+      }
+
+      /* Profile section mobile */
+      #u-section-profile div[style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+      }
+
+      /* Toggle row mobile */
+      .toggle-row {
+        padding: 14px 16px;
+      }
+
+      .toggle-label {
+        font-size: .82rem;
+      }
+
+      .toggle-sub {
+        font-size: .7rem;
+      }
+
+      /* Toast mobile */
+      .toast {
+        left: 16px;
+        right: 16px;
+        bottom: calc(80px + env(safe-area-inset-bottom));
+        text-align: center;
+        font-size: .82rem;
+      }
+
+      /* Footer mobile */
+      .footer {
+        padding: 24px 16px;
+        font-size: .75rem;
+      }
+
+      /* Auth modal trade grid */
+      #trade-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 6px !important;
+      }
+
+      /* Chat modal mobile */
+      .chat-modal {
+        height: 80vh;
+      }
+    }
+
+    .sidebar-bottom {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .dash-main {
+      padding: 32px;
+      overflow-y: auto;
+    }
+
+    @media (max-width: 768px) {
+      .dash-main {
+        padding: 20px;
+      }
+    }
+
+    .dash-header {
+      margin-bottom: 28px;
+    }
+
+    .dash-header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -.02em;
+    }
+
+    .dash-header p {
+      color: var(--text-2);
+      font-size: .875rem;
+      margin-top: 4px;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .stat-box {
+      padding: 20px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+    }
+
+    .stat-box .sb-label {
+      font-size: .75rem;
+      color: var(--text-3);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-bottom: 8px;
+    }
+
+    .stat-box .sb-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -.02em;
+    }
+
+    .stat-box .sb-sub {
+      font-size: .75rem;
+      color: var(--text-3);
+      margin-top: 4px;
+    }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-header h2 {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .card-body {
+      padding: 0;
+    }
+
+    .empty-state {
+      padding: 48px 24px;
+      text-align: center;
+      color: var(--text-3);
+      font-size: .9rem;
+    }
+
+    .empty-state .es-icon {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+
+    .job-item {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .job-item:last-child {
+      border-bottom: none;
+    }
+
+    .job-icon {
+      font-size: 1.2rem;
+      width: 36px;
+      height: 36px;
+      background: var(--surface);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .job-info {
+      flex: 1;
+    }
+
+    .job-title {
+      font-size: .875rem;
+      font-weight: 600;
+    }
+
+    .job-sub {
+      font-size: .75rem;
+      color: var(--text-3);
+      margin-top: 2px;
+    }
+
+    .job-status {
+      flex-shrink: 0;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-size: .7rem;
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+
+    .badge-pending {
+      background: var(--yellow-bg);
+      color: var(--yellow);
+    }
+
+    .badge-confirmed {
+      background: var(--blue-bg);
+      color: var(--blue);
+    }
+
+    .badge-completed {
+      background: var(--green-bg);
+      color: var(--green);
+    }
+
+    .badge-accepted {
+      background: var(--blue-bg);
+      color: var(--blue);
+    }
+
+    .badge-inprogress {
+      background: #fff7ed;
+      color: #c2410c;
+      border: 1px solid #fed7aa;
+    }
+
+    .badge-available {
+      background: var(--green-bg);
+      color: var(--green);
+    }
+
+    .badge-busy {
+      background: var(--red-bg);
+      color: var(--red);
+    }
+
+    @keyframes pulse-anim {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: 0.35;
+        transform: scale(1.4);
+      }
+    }
+
+    .pulse-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--blue);
+      margin-right: 6px;
+      flex-shrink: 0;
+      animation: pulse-anim 1.4s ease-in-out infinite;
+    }
+
+    .accepted-banner {
+      display: flex;
+      align-items: center;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: .78rem;
+      margin: 6px 0;
+      gap: 2px;
+      line-height: 1.4;
+    }
+
+    .inprogress-label {
+      display: flex;
+      align-items: center;
+      font-size: .72rem;
+      color: #c2410c;
+      margin-top: 5px;
+      font-weight: 500;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+    }
+
+    .toggle-wrap {
+      position: relative;
+      width: 44px;
+      height: 24px;
+    }
+
+    .toggle-wrap input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      background: var(--border);
+      border-radius: 99px;
+      cursor: pointer;
+      transition: background .2s;
+    }
+
+    .toggle-track::after {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: white;
+      top: 3px;
+      left: 3px;
+      transition: transform .2s;
+    }
+
+    .toggle-wrap input:checked+.toggle-track {
+      background: var(--green);
+    }
+
+    .toggle-wrap input:checked+.toggle-track::after {
+      transform: translateX(20px);
+    }
+
+    .toggle-label {
+      font-size: .875rem;
+      font-weight: 500;
+    }
+
+    .toggle-sub {
+      font-size: .75rem;
+      color: var(--text-3);
+    }
+
+    .chart-area {
+      padding: 20px;
+    }
+
+    .chart-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      height: 120px;
+      margin-bottom: 8px;
+    }
+
+    .chart-bar-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .cbar {
+      width: 100%;
+      background: var(--text);
+      border-radius: 4px 4px 0 0;
+      transition: height .5s cubic-bezier(.2, 0, .2, 1);
+    }
+
+    .cbar-label {
+      font-size: .65rem;
+      color: var(--text-3);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--text);
+      color: var(--accent-fg);
+      padding: 12px 20px;
+      border-radius: var(--radius-sm);
+      font-size: .875rem;
+      z-index: 9999;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: all .3s;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: none;
+    }
+
+    .role-pick-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 20px 0;
+    }
+
+    .role-pick-card {
+      padding: 24px 16px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      text-align: center;
+      cursor: pointer;
+      transition: all .2s;
+      background: var(--bg);
+    }
+
+    .role-pick-card:hover {
+      border-color: var(--text-3);
+      background: var(--surface);
+    }
+
+    .role-pick-card.selected {
+      border-color: var(--text);
+      background: var(--surface);
+    }
+
+    .role-pick-card .rpc-icon {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    .role-pick-card .rpc-title {
+      font-size: .95rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .role-pick-card .rpc-desc {
+      font-size: .75rem;
+      color: var(--text-3);
+      line-height: 1.4;
+    }
+
+    .auth-step {
+      display: none;
+    }
+
+    .auth-step.active {
+      display: block;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .8rem;
+      color: var(--text-3);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0 0 16px 0;
+      font-family: inherit;
+    }
+
+    .back-btn:hover {
+      color: var(--text);
+    }
+
+    .role-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 99px;
+      font-size: .75rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .role-tag-user {
+      background: var(--blue-bg);
+      color: var(--blue);
+    }
+
+    .role-tag-worker {
+      background: var(--green-bg);
+      color: var(--green);
+    }
+
+    /* CHAT STYLES */
+    .chat-modal {
+      max-width: 500px;
+      height: 600px;
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+    }
+
+    .chat-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: var(--surface);
+    }
+
+    .chat-message {
+      display: flex;
+      flex-direction: column;
+      max-width: 80%;
+    }
+
+    .chat-message.sent {
+      align-self: flex-end;
+    }
+
+    .chat-message.received {
+      align-self: flex-start;
+    }
+
+    .message-bubble {
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: .875rem;
+      position: relative;
+    }
+
+    .sent .message-bubble {
+      background: var(--text);
+      color: #fff;
+      border-bottom-right-radius: 2px;
+    }
+
+    .received .message-bubble {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 2px;
+    }
+
+    .message-sender {
+      font-size: .65rem;
+      font-weight: 700;
+      margin-bottom: 2px;
+      text-transform: uppercase;
+      opacity: 0.7;
+    }
+
+    .message-time {
+      font-size: .65rem;
+      margin-top: 4px;
+      opacity: 0.5;
+      text-align: right;
+    }
+
+    .chat-footer {
+      padding: 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+    }
+
+    .chat-input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      font-size: .9rem;
+      outline: none;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .chat-input:focus {
+      border-color: var(--text);
+    }
+
+    .pass-container {
+      position: relative;
+    }
+
+    .pass-toggle {
+      position: absolute;
+      top: 50%;
+      right: 12px;
+      transform: translateY(-50%);
+      cursor: pointer;
+      opacity: 0.5;
+      font-size: 0.9rem;
+      user-select: none;
+    }
+
+    .pass-toggle:hover {
+      opacity: 1;
+    }
+    @media (max-width: 600px) {
+      #u-section-profile .stat-box {
+        padding: 14px;
+      }
+      #u-section-profile div[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="loading">
+    <div class="loader"></div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <!-- LANDING PAGE -->
+  <div class="page active" id="page-landing">
+    <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="logo">Fix<span>Hub</span></a>
+      <div class="nav-actions">
+        <div class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+          <span class="icon-sun">☀️</span>
+          <span class="icon-moon">🌙</span>
+        </div>
+        <a href="admin.html" class="btn btn-primary mobile-hide">Admin Portal</a>
+        <button class="btn btn-primary mobile-hide" id="nav-login-btn" onclick="openModal('modal-auth')">Sign In</button>
+      </div>
+    </div>
+    </nav>
+    <div class="hero">
+      <div>
+        <div class="hero-badge">🔧 Verified Professionals</div>
+        <h1>Home services,<br>done right.</h1>
+        <p>Book skilled tradespeople for electrical, plumbing, HVAC, and more. Fast, reliable, transparent pricing.</p>
+        <div class="hero-actions">
+          <button class="btn btn-primary btn-lg" onclick="openModal('modal-auth')">Book a Service</button>
+          <button class="btn btn-outline btn-lg"
+            onclick="document.getElementById('services-section').scrollIntoView({behavior:'smooth'})">Browse
+            Trades</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="services-section">
+      <div class="section-label">Services</div>
+      <div class="section-title">What can we fix?</div>
+      <div class="services-grid">
+        <div class="service-item" onclick="openModal('modal-auth')">
+          <div class="si-icon">⚡</div>
+          <div class="si-name">Electrical</div>
+          <div class="si-desc">Wiring, panels, smart home</div>
+        </div>
+        <div class="service-item" onclick="openModal('modal-auth')">
+          <div class="si-icon">🚰</div>
+          <div class="si-name">Plumbing</div>
+          <div class="si-desc">Leaks, drains, water heaters</div>
+        </div>
+        <div class="service-item" onclick="openModal('modal-auth')">
+          <div class="si-icon">❄️</div>
+          <div class="si-name">HVAC</div>
+          <div class="si-desc">AC, heating, air quality</div>
+        </div>
+        <div class="service-item" onclick="openModal('modal-auth')">
+          <div class="si-icon">🛠️</div>
+          <div class="si-name">Handyman</div>
+          <div class="si-desc">Assembly, mounting, repairs</div>
+        </div>
+        <div class="service-item" onclick="openModal('modal-auth')">
+          <div class="si-icon">🪟</div>
+          <div class="si-name">Carpentry</div>
+          <div class="si-desc">Doors, windows, cabinets</div>
+        </div>
+        <div class="service-item" onclick="openModal('modal-auth')">
+          <div class="si-icon">🎨</div>
+          <div class="si-name">Painting</div>
+          <div class="si-desc">Interior & exterior</div>
+        </div>
+        <div class="service-item" onclick="openModal('modal-auth')">
+          <div class="si-icon">🏡</div>
+          <div class="si-name">Cleaning</div>
+          <div class="si-desc">Deep clean, post-construction</div>
+        </div>
+        <div class="service-item" onclick="openModal('modal-auth')">
+          <div class="si-icon">🌿</div>
+          <div class="si-name">Landscaping</div>
+          <div class="si-desc">Lawn care, gardening</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Process</div>
+      <div class="section-title">How it works</div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <h3>Book online</h3>
+          <p>Choose a service, describe your issue, and pick a convenient time.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <h3>We match you</h3>
+          <p>A verified professional near you confirms your booking.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <h3>Job done</h3>
+          <p>The pro arrives, fixes the problem. Pay securely through the app.</p>
+        </div>
+      </div>
+    </div>
+    <footer class="footer">
+      <p>© 2025 FixHub. Built with care.</p>
+    </footer>
+  </div>
+
+  <!-- USER DASHBOARD -->
+  <div class="page" id="page-user-dash">
+    <nav class="nav">
+      <div class="nav-inner">
+        <a href="#" class="logo">Fix<span>Hub</span></a>
+        <div class="nav-actions">
+          <div class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+            <span class="icon-sun">☀️</span>
+            <span class="icon-moon">🌙</span>
+          </div>
+          <span id="user-nav-name" style="font-size:.875rem;color:var(--text-2)"></span>
+          <button class="btn btn-ghost" onclick="doSignOut()">Sign out</button>
+        </div>
+      </div>
+    </nav>
+    <div class="dash-layout">
+      <aside class="sidebar">
+        <div class="sidebar-user">
+          <div class="user-avatar" id="user-avatar-u">U</div>
+          <div class="user-name" id="user-sidebar-name">User</div>
+          <div class="user-role">Customer</div>
+        </div>
+        <ul class="sidebar-nav">
+          <li><a href="#" class="active" id="unav-bookings" onclick="event.preventDefault();showUserSection('bookings')"><span>📋</span> My Bookings</a></li>
+          <li><a href="#" onclick="event.preventDefault();openModal('modal-book')"><span>➕</span> New Request</a></li>
+          <li><a href="#" id="unav-profile" onclick="event.preventDefault();showUserSection('profile')"><span>👤</span> Profile</a></li>
+          <li><a href="#" id="unav-settings" onclick="event.preventDefault();showUserSection('settings')"><span>⚙️</span> Settings</a></li>
+          <li><a href="#" onclick="event.preventDefault();openModal('modal-complaint')"
+              style="color:var(--red)"><span>⚠️</span> Complaint</a></li>
+        </ul>
+        <div class="sidebar-bottom">
+          <button class="btn btn-ghost" style="width:100%;justify-content:flex-start;gap:8px"
+            onclick="doSignOut()"><span>→</span> Sign out</button>
+        </div>
+      </aside>
+      <main class="dash-main">
+        <!-- BOOKINGS SECTION -->
+        <div id="u-section-bookings">
+          <div class="dash-header">
+            <h1>My Bookings</h1>
+            <p>Track and manage your service requests.</p>
+          </div>
+          <div class="stats-row">
+            <div class="stat-box">
+              <div class="sb-label">Total Requests</div>
+              <div class="sb-value" id="u-stat-total">0</div>
+            </div>
+            <div class="stat-box">
+              <div class="sb-label">Pending</div>
+              <div class="sb-value" id="u-stat-pending">0</div>
+            </div>
+            <div class="stat-box">
+              <div class="sb-label">Completed</div>
+              <div class="sb-value" id="u-stat-done">0</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h2>Active Requests</h2>
+              <button class="btn btn-primary" onclick="openModal('modal-book')">+ New Request</button>
+            </div>
+            <div class="card-body" id="user-bookings-list">
+              <div class="table-wrapper">
+                <div class="empty-state">
+                  <div class="es-icon">📭</div>
+                  <p>No bookings yet. Book your first service!</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="margin-top:24px">
+            <div class="card-header">
+              <h2>My Complaints</h2>
+              <p class="sub" style="margin-bottom:0">Track issues you've reported</p>
+            </div>
+            <div class="card-body" id="user-complaints-list">
+              <div class="empty-state">
+                <p style="color:var(--text-3)">Loading complaints...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PROFILE SECTION -->
+        <div id="u-section-profile" style="display:none">
+          <div class="dash-header">
+            <h1>My Profile</h1>
+            <p>View and manage your account information.</p>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h2>Account Details</h2>
+            </div>
+            <div class="card-body" style="padding:24px">
+              <div style="display:flex;align-items:center;gap:20px;margin-bottom:24px">
+                <div class="user-avatar" id="profile-avatar" style="width:64px;height:64px;font-size:1.5rem">U</div>
+                <div>
+                  <div style="font-size:1.1rem;font-weight:700" id="profile-name">User</div>
+                  <div style="font-size:.85rem;color:var(--text-3)" id="profile-email">user@email.com</div>
+                  <div style="margin-top:6px"><span class="badge badge-confirmed" id="profile-role-badge">Customer</span></div>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                <div class="stat-box">
+                  <div class="sb-label">Member Since</div>
+                  <div class="sb-value" id="profile-joined" style="font-size:1rem">—</div>
+                </div>
+                <div class="stat-box">
+                  <div class="sb-label">Total Bookings</div>
+                  <div class="sb-value" id="profile-total-bookings" style="font-size:1rem">0</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="margin-top:20px">
+            <div class="card-header">
+              <h2>Update Display Name</h2>
+            </div>
+            <div class="card-body" style="padding:24px">
+              <div class="form-field">
+                <label>Display Name</label>
+                <input type="text" id="profile-edit-name" placeholder="Your display name" />
+              </div>
+              <button class="btn btn-primary" onclick="updateDisplayName()">Save Name</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SETTINGS SECTION -->
+        <div id="u-section-settings" style="display:none">
+          <div class="dash-header">
+            <h1>Settings</h1>
+            <p>Customize your FixHub experience.</p>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h2>Appearance</h2>
+            </div>
+            <div class="toggle-row">
+              <label class="toggle-wrap">
+                <input type="checkbox" id="settings-dark-toggle" onchange="toggleThemeFromSettings()">
+                <div class="toggle-track"></div>
+              </label>
+              <div>
+                <div class="toggle-label">Dark Mode</div>
+                <div class="toggle-sub">Switch between light and dark theme</div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="margin-top:20px">
+            <div class="card-header">
+              <h2>Notifications</h2>
+            </div>
+            <div class="toggle-row">
+              <label class="toggle-wrap">
+                <input type="checkbox" id="settings-email-notif" checked onchange="saveNotifPrefs()">
+                <div class="toggle-track"></div>
+              </label>
+              <div>
+                <div class="toggle-label">Email Notifications</div>
+                <div class="toggle-sub">Receive updates about your bookings via email</div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="margin-top:20px">
+            <div class="card-header">
+              <h2>Account Actions</h2>
+            </div>
+            <div style="padding:24px;display:flex;gap:12px;flex-wrap:wrap">
+              <button class="btn btn-outline" onclick="doSignOut()">Sign Out</button>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Mobile Bottom Navigation (User) -->
+      <div class="mobile-bottom-nav">
+        <a href="#" class="mobile-nav-item active" id="mnav-u-bookings" onclick="event.preventDefault();showUserSection('bookings')">
+          <span>📋</span>
+          <div>Bookings</div>
+        </a>
+        <a href="#" class="mobile-nav-item" onclick="event.preventDefault();openModal('modal-book')">
+          <span>➕</span>
+          <div>New</div>
+        </a>
+        <a href="#" class="mobile-nav-item" id="mnav-u-profile" onclick="event.preventDefault();showUserSection('profile')">
+          <span>👤</span>
+          <div>Profile</div>
+        </a>
+        <a href="#" class="mobile-nav-item" style="color:var(--red)"
+          onclick="event.preventDefault();openModal('modal-complaint')">
+          <span>⚠️</span>
+          <div>Complaint</div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- WORKER DASHBOARD -->
+  <div class="page" id="page-worker-dash">
+    <nav class="nav">
+      <div class="nav-inner">
+        <a href="#" class="logo">Fix<span>Hub</span></a>
+        <div class="nav-actions">
+          <div class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+            <span class="icon-sun">☀️</span>
+            <span class="icon-moon">🌙</span>
+          </div>
+          <span id="worker-nav-name" style="font-size:.875rem;color:var(--text-2)"></span>
+          <button class="btn btn-ghost" onclick="doSignOut()">Sign out</button>
+        </div>
+      </div>
+    </nav>
+    <div class="dash-layout">
+      <aside class="sidebar">
+        <div class="sidebar-user">
+          <div class="user-avatar" id="user-avatar-w">W</div>
+          <div class="user-name" id="worker-sidebar-name">Worker</div>
+          <div class="user-role" id="worker-sidebar-specialty">Professional</div>
+        </div>
+        <ul class="sidebar-nav">
+          <li><a href="#" class="active" id="wnav-jobs" onclick="showWorkerSection('jobs')"><span>🔧</span> My Jobs</a></li>
+          <li><a href="#" id="wnav-reqs" onclick="showWorkerSection('reqs')"><span>📩</span> Incoming Requests <span class="nav-badge" id="w-badge-reqs" style="display:none">0</span></a></li>
+          <li><a href="#" id="wnav-earnings" onclick="showWorkerSection('earnings')"><span>📊</span> Earnings</a></li>
+          <li><a href="#" id="wnav-profile" onclick="showWorkerSection('profile')"><span>👤</span> Profile</a></li>
+        </ul>
+        <div class="sidebar-bottom">
+          <button class="btn btn-ghost" style="width:100%;justify-content:flex-start;gap:8px"
+            onclick="doSignOut()"><span>→</span> Sign out</button>
+        </div>
+      </aside>
+      <main class="dash-main">
+        <div class="dash-header">
+          <h1>My Jobs</h1>
+          <p>Manage your assigned service requests.</p>
+        </div>
+        <div id="w-section-jobs">
+          <div class="card" style="margin-bottom:20px">
+            <div class="card-header">
+              <h2>Availability</h2>
+            </div>
+            <div class="toggle-row">
+              <label class="toggle-wrap">
+                <input type="checkbox" id="avail-toggle" checked onchange="updateAvailability()">
+                <div class="toggle-track"></div>
+              </label>
+              <div>
+                <div class="toggle-label" id="avail-label">Available for new jobs</div>
+                <div class="toggle-sub">Workers can only receive jobs when available</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h2>Active Jobs</h2>
+            </div>
+            <div class="card-body" id="worker-jobs-list">
+              <div class="table-wrapper">
+                <div class="empty-state">
+                  <div class="es-icon">🔧</div>
+                  <p>No jobs assigned yet. Toggle availability to receive requests.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="w-section-reqs" style="display:none">
+          <div class="card" id="worker-opps-card" style="margin-bottom:20px">
+            <div class="card-header" style="background:var(--blue-bg);border-bottom-color:var(--blue)">
+              <h2 style="color:var(--blue)">Incoming Requests</h2>
+              <span class="badge badge-confirmed">Matching your trades</span>
+            </div>
+            <div class="card-body" id="worker-opps-list">
+              <div class="table-wrapper">
+                <div class="empty-state">
+                  <p>Looking for new requests...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="w-section-earnings" style="display:none">
+          <div class="stats-row">
+            <div class="stat-box">
+              <div class="sb-label">Assigned Jobs</div>
+              <div class="sb-value" id="w-stat-jobs">0</div>
+            </div>
+            <div class="stat-box">
+              <div class="sb-label">Completed</div>
+              <div class="sb-value" id="w-stat-done">0</div>
+            </div>
+            <div class="stat-box">
+              <div class="sb-label">This Month</div>
+              <div class="sb-value" id="w-stat-earnings">₹0</div>
+            </div>
+            <div class="stat-box">
+              <div class="sb-label">Rating</div>
+              <div class="sb-value" id="w-stat-rating">—</div>
+              <div class="sb-sub">Based on reviews</div>
+            </div>
+          </div>
+          <div class="card" style="margin-bottom:20px">
+            <div class="card-header">
+              <h2>Earnings — Last 7 Days</h2>
+            </div>
+            <div class="chart-area">
+              <div class="chart-bars" id="earningsChart"></div>
+              <div style="font-size:.75rem;color:var(--text-3);text-align:center">₹ (thousands)</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="w-section-profile" style="display:none">
+          <div class="card">
+            <div class="card-header">
+              <h2>Account Details</h2>
+            </div>
+            <div class="card-body" style="padding:24px">
+              <div style="display:flex;align-items:center;gap:20px;margin-bottom:24px">
+                <div class="user-avatar" id="w-profile-avatar" style="width:64px;height:64px;font-size:1.5rem">W</div>
+                <div>
+                  <div style="font-size:1.1rem;font-weight:700" id="w-profile-name">Worker</div>
+                  <div style="font-size:.85rem;color:var(--text-3)" id="w-profile-email">worker@email.com</div>
+                  <div style="margin-top:6px"><span class="badge badge-confirmed">Professional</span></div>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                <div class="stat-box">
+                  <div class="sb-label">Member Since</div>
+                  <div class="sb-value" id="w-profile-joined" style="font-size:1rem">—</div>
+                </div>
+                <div class="stat-box">
+                  <div class="sb-label">Jobs Completed</div>
+                  <div class="sb-value" id="w-profile-total-bookings" style="font-size:1rem">0</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="margin-top:20px">
+            <div class="card-header">
+              <h2>Update Display Name</h2>
+            </div>
+            <div class="card-body" style="padding:24px">
+              <div class="form-field">
+                <label>Display Name</label>
+                <input type="text" id="w-profile-edit-name" placeholder="Your display name" />
+              </div>
+              <button class="btn btn-primary" onclick="updateDisplayNameWorker()">Save Name</button>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Mobile Bottom Navigation (Worker) -->
+      <div class="mobile-bottom-nav">
+        <a href="#" class="mobile-nav-item active" id="mnav-w-jobs"
+          onclick="event.preventDefault();showWorkerSection('jobs')">
+          <span>🔧</span>
+          <div>My Jobs</div>
+        </a>
+        <a href="#" class="mobile-nav-item" id="mnav-w-reqs" onclick="event.preventDefault();showWorkerSection('reqs')">
+          <span style="position:relative">
+            📩
+            <span class="nav-badge" id="w-badge-reqs-mobile"
+              style="display:none;position:absolute;top:-5px;right:-10px;transform:scale(0.8)">0</span>
+          </span>
+          <div>Inbox</div>
+        </a>
+        <a href="#" class="mobile-nav-item" style="color:var(--red)"
+          onclick="event.preventDefault();openModal('modal-complaint')">
+          <span>⚠️</span>
+          <div>Complaint</div>
+        </a>
+        <a href="#" class="mobile-nav-item" onclick="event.preventDefault();doSignOut()">
+          <span>🚪</span>
+          <div>Exit</div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUTH MODAL -->
+  <div class="modal-overlay" id="modal-auth">
+    <div class="modal" style="max-width:480px">
+      <button class="modal-close" onclick="closeModal('modal-auth')">✕</button>
+      <div class="auth-step active" id="auth-step-1">
+        <h2 style="margin-bottom:6px">Welcome to FixHub</h2>
+        <p class="sub">How would you like to continue?</p>
+        <div class="role-pick-grid">
+          <div class="role-pick-card" id="rpc-user" onclick="pickRole('user')">
+            <div class="rpc-icon">🏠</div>
+            <div class="rpc-title">I'm a Customer</div>
+            <div class="rpc-desc">Book services and find professionals</div>
+          </div>
+          <div class="role-pick-card" id="rpc-worker" onclick="pickRole('worker')">
+            <div class="rpc-icon">🔧</div>
+            <div class="rpc-title">I'm a Professional</div>
+            <div class="rpc-desc">Offer services and manage your jobs</div>
+          </div>
+        </div>
+      </div>
+      <div class="auth-step" id="auth-step-2">
+        <button class="back-btn" onclick="goBackToRolePick()">← Back</button>
+        <span class="role-tag role-tag-worker" style="margin-bottom:12px;display:inline-flex">🔧 Professional</span>
+        <h2 style="margin-bottom:4px">What's your trade?</h2>
+        <p class="sub" style="margin-bottom:16px">Pick all that apply — you can change this later.</p>
+        <div id="trade-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px"></div>
+        <button class="btn btn-primary btn-full" onclick="goToAuthForm()">Continue →</button>
+      </div>
+      <div class="auth-step" id="auth-step-3">
+        <button class="back-btn" onclick="goBackFromAuthForm()">← Back</button>
+        <div id="auth-role-tag"></div>
+        <h2 id="auth-modal-title">Sign in</h2>
+        <p class="sub" id="auth-modal-sub" style="margin-bottom:20px">Sign in to your account to continue.</p>
+        <button class="btn btn-google" onclick="googleSignIn()">
+          <svg width="18" height="18" viewBox="0 0 48 48">
+            <path fill="#EA4335"
+              d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+            <path fill="#4285F4"
+              d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+            <path fill="#FBBC05"
+              d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+            <path fill="#34A853"
+              d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+          </svg>
+          Continue with Google
+        </button>
+        <div class="divider">or</div>
+        <div class="form-field"><label>Email address</label><input type="email" id="auth-email"
+            placeholder="you@example.com" /></div>
+        <div class="form-field"><label>Password</label>
+          <div class="pass-container">
+            <input type="password" id="auth-password" placeholder="••••••••" style="padding-right:40px" />
+            <span class="pass-toggle" onclick="togglePassVisibility('auth-password', this)">👁️</span>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-full" id="auth-btn" onclick="emailAuth()">Sign In</button>
+        <p style="text-align:center;margin-top:16px;font-size:.8rem;color:var(--text-3)">
+          <span id="auth-switch-text">Don't have an account?</span>
+          <a href="#" style="color:var(--text);font-weight:500" onclick="event.preventDefault();toggleAuthMode()"
+            id="auth-switch-link">Sign Up</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOOK SERVICE MODAL -->
+  <div class="modal-overlay" id="modal-book">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal('modal-book')">✕</button>
+      
+      <div id="booking-form-content">
+        <h2>New Service Request</h2>
+        <p class="sub">Describe your issue and we'll match you with a pro.</p>
+        <div class="form-field"><label>Service Type</label>
+          <select id="book-type">
+            <option>Electrical</option>
+            <option>Plumbing</option>
+            <option>HVAC</option>
+            <option>Handyman</option>
+            <option>Carpentry</option>
+            <option>Painting</option>
+            <option>Cleaning</option>
+            <option>Landscaping</option>
+          </select>
+        </div>
+        <div class="form-field"><label>Describe the issue</label><textarea id="book-desc"
+            placeholder="e.g. Kitchen tap is leaking…"></textarea></div>
+        <div class="form-field"><label>Location / Address</label><input type="text" id="book-location"
+            placeholder="e.g. 123 Maple St, Apt 4B" /></div>
+        <div class="form-field"><label>Preferred Date & Time</label><input type="datetime-local" id="book-date" /></div>
+        <div class="form-field"><label>Add Images (Optional)</label><input type="file" id="book-images" accept="image/*"
+            multiple style="border:none;padding:0" /></div>
+        <button class="btn btn-primary btn-full" onclick="submitBooking()">Submit Request</button>
+      </div>
+
+      <div id="booking-confirmation-content" style="display:none" class="confirmation-content">
+        <div class="success-icon-wrapper">
+          <div class="success-icon">✓</div>
+        </div>
+        <h2 style="margin-bottom:8px">Request submitted!</h2>
+        <p class="sub">We're matching you with a verified pro nearby</p>
+        
+        <div class="booking-id-badge" id="conf-booking-id">FH-XXXX-XXXX</div>
+        
+        <div class="details-card">
+          <div class="details-row">
+            <span class="details-label">Service</span>
+            <span class="details-value" id="conf-type">Electrical</span>
+          </div>
+          <div class="details-row">
+            <span class="details-label">Date & Time</span>
+            <span class="details-value" id="conf-date">Today, 10:30 AM</span>
+          </div>
+          <div class="details-row">
+            <span class="details-label">Location</span>
+            <span class="details-value" id="conf-location">123 Maple St</span>
+          </div>
+          <div class="details-row">
+            <span class="details-label">Status</span>
+            <span class="badge badge-pending">Awaiting pro</span>
+          </div>
+        </div>
+
+        <div class="step-tracker">
+          <div class="step-item done" style="margin-bottom:16px">
+            <div class="step-dot"></div>
+            <div class="step-title">Request received</div>
+            <div class="step-sub">We've got your details</div>
+          </div>
+          <div class="step-item pending" style="margin-bottom:16px">
+            <div class="step-dot"></div>
+            <div class="step-title">Pro assigned</div>
+            <div class="step-sub">Matching (~30 min)</div>
+          </div>
+          <div class="step-item">
+            <div class="step-dot"></div>
+            <div class="step-title">Pro arrives & fixes</div>
+            <div class="step-sub">Service completion</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:24px">
+          <button class="btn btn-primary" onclick="showUserSection('bookings');closeModal('modal-book')">Track booking</button>
+          <button class="btn btn-outline" id="conf-cancel-btn">Cancel request</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REVIEW MODAL -->
+  <div class="modal-overlay" id="modal-review">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal('modal-review')">✕</button>
+      <h2>Rate Professional</h2>
+      <p class="sub">How was your experience with the professional?</p>
+      <input type="hidden" id="review-booking-id" />
+      <input type="hidden" id="review-worker-id" />
+      <div class="form-field">
+        <label>Rating (1-5)</label>
+        <select id="review-rating">
+          <option value="5">5 - Excellent</option>
+          <option value="4">4 - Good</option>
+          <option value="3">3 - Average</option>
+          <option value="2">2 - Fair</option>
+          <option value="1">1 - Poor</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Comment (Optional)</label>
+        <textarea id="review-comment" placeholder="Tell us about the service..."></textarea>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="submitReviewForm()">Submit Review</button>
+    </div>
+  </div>
+
+  <!-- COMPLAINT MODAL -->
+  <div class="modal-overlay" id="modal-complaint">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal('modal-complaint')">✕</button>
+      <h2>Complaint</h2>
+      <p class="sub">Let us know what went wrong, and our team will look into it.</p>
+      <div class="form-field">
+        <label>Issue Category</label>
+        <select id="comp-category">
+          <option value="">Select Category</option>
+          <option>Service Quality</option>
+          <option>Professional Conduct</option>
+          <option>Pricing Issue</option>
+          <option>Delay in Service</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Worker Appointed</label>
+        <select id="comp-worker">
+          <option value="">Select Worker (if applicable)</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Description Box</label>
+        <textarea id="comp-message" placeholder="Please describe the issue in detail..."></textarea>
+      </div>
+      <div class="form-field">
+        <label>Upload Photos/Video (Optional)</label>
+        <input type="file" id="comp-media" accept="image/*,video/*" multiple style="border:none;padding:0" />
+      </div>
+      <button class="btn btn-primary btn-full" style="background:var(--red);border-color:var(--red)"
+        onclick="submitComplaintForm()">Submit Complaint</button>
+    </div>
+  </div>
+
+  <!-- Reschedule Modal -->
+  <div class="modal-overlay" id="modal-reschedule">
+    <div class="modal" style="max-width: 400px;">
+      <button class="modal-close" onclick="closeModal('modal-reschedule')">✕</button>
+      <div style="text-align:center; margin-bottom: 20px;">
+        <h2 style="margin-bottom:5px;">Reschedule Booking</h2>
+        <p style="font-size:14px; color:var(--text-3)">Pick a new date and time for your service.</p>
+      </div>
+      
+      <div style="margin-bottom: 20px;">
+        <label style="display:block; font-size:12px; color:var(--text-3); margin-bottom:6px">New Date & Time</label>
+        <input type="datetime-local" id="reschedule-date" class="form-input" style="width:100%">
+      </div>
+      
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px">
+        <button class="btn btn-ghost" onclick="closeModal('modal-reschedule')">Cancel</button>
+        <button class="btn btn-primary" id="reschedule-submit-btn">Submit Request</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAT MODAL -->
+  <div class="modal-overlay" id="modal-chat">
+    <div class="modal" style="max-width:500px; padding:0; height:80vh; max-height:600px; display:flex; flex-direction:column; overflow:hidden;">
+      <div style="padding:15px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:flex-start; background:white;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="position:relative;">
+            <div id="chat-worker-initials" style="width:40px; height:40px; border-radius:50%; background:var(--surface); display:flex; align-items:center; justify-content:center; font-weight:700;">W</div>
+            <div id="chat-online-dot" style="position:absolute; bottom:0; right:0; width:10px; height:10px; border-radius:50%; background:#10b981; border:2px solid white;"></div>
+          </div>
+          <div>
+            <div id="chat-worker-name" style="font-weight:600; font-size:1rem; line-height:1.2;">Name</div>
+            <div id="chat-worker-trade" style="font-size:0.75rem; color:var(--text-2); margin-top:2px;">Trade · Distance</div>
+            <div style="margin-top:4px;"><span class="badge badge-confirmed" id="chat-booking-pill" style="font-size:0.65rem; background:var(--surface); color:var(--text); border:1px solid var(--border);">ID · Trade</span></div>
+          </div>
+        </div>
+        <button class="modal-close" style="position:static" onclick="window.ChatSystem.closeChat()">✕</button>
+      </div>
+      
+      <div id="chat-messages" style="flex:1; overflow-y:auto; padding:20px; background:#f9f9f9;">
+        <!-- Messages -->
+      </div>
+      
+      <div style="padding:15px; background:white; border-top:1px solid var(--border); display:flex; gap:10px;">
+        <input type="text" id="chat-input" placeholder="Message..." style="flex:1; padding:10px 14px; border:1px solid var(--border); border-radius:4px; font-size:0.9rem; outline:none;">
+        <button id="chat-send-btn" style="padding:0 20px; background:#0d9488; color:white; border:none; border-radius:4px; font-weight:500; cursor:pointer;">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tracking Modal -->
+  <div class="modal-overlay" id="modal-track">
+    <div class="modal" style="max-width: 450px;">
+      <button class="modal-close" onclick="closeModal('modal-track')">✕</button>
+      <div style="text-align:center; margin-bottom: 20px;">
+        <h2 style="margin-bottom:5px;">Track Booking</h2>
+        <p id="track-id-display" style="font-family:monospace; background:#f7f7f8; display:inline-block; padding:4px 10px; border-radius:6px; font-size:14px; color:var(--text-2)"></p>
+      </div>
+      
+      <div class="tracking-timeline" id="tracking-content">
+        <!-- Steps will be injected here -->
+      </div>
+      
+      <div style="margin-top: 25px; padding-top: 15px; border-top: 1px solid #eee; display: flex; justify-content: center;">
+        <button class="btn btn-ghost" onclick="closeModal('modal-track')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="storage.rules" style="display:none"></script>
+  <script src="location-system.js"></script>
+  <script src="email-service.js?v=1.1.2"></script>
+  <script src="chat-system.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyD8iBxy_TztsyDI0YH_j0-Zpn_mufw_BNY",
+      authDomain: "fixhub-2411.firebaseapp.com",
+      projectId: "fixhub-2411",
+      storageBucket: "fixhub-2411.firebasestorage.app",
+      messagingSenderId: "122871478979",
+      appId: "1:122871478979:web:5e4d1920c8dc47dcfe0076"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    const storage = firebase.storage();
+    const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+    // Initialize Email Service
+    if (window.EmailService) window.EmailService.init();
+
+    let currentUser = null, currentRole = null, isSignUp = false, selectedSignUpRole = 'user';;
+
+    auth.onAuthStateChanged(async user => {
+      hideLoading();
+      if (user && !user.isAnonymous) {
+        try {
+          const userDoc = await db.collection('users').doc(user.uid).get();
+          const userData = userDoc.data();
+          
+          if (userData && userData.suspended) {
+            showToast('Account suspended. Contact support.');
+            setTimeout(() => auth.signOut(), 1500);
+            return;
+          }
+
+          currentUser = user;
+          const role = userData ? (userData.role || 'user') : 'user';
+          currentRole = role;
+          localStorage.setItem('fh_role_' + user.uid, role);
+          
+          if (role === 'worker') showWorkerDash();
+          else showUserDash();
+        } catch (e) {
+          console.error("Auth sync error:", e);
+          showUserDash(); // Fallback
+        }
+      } else {
+        currentUser = null; currentRole = null;
+        showPage('page-landing');
+      }
+    });
+
+    async function getUserRole(uid) {
+      const cached = localStorage.getItem('fh_role_' + uid);
+      if (cached) return cached;
+      try {
+        const doc = await db.collection('users').doc(uid).get();
+        const role = doc.exists ? (doc.data().role || 'user') : 'user';
+        localStorage.setItem('fh_role_' + uid, role);
+        return role;
+      } catch (e) { return 'user'; }
+    }
+
+    async function saveUserRole(uid, role, name, email) {
+      try {
+        localStorage.setItem('fh_role_' + uid, role);
+        const trades = role === 'worker' ? [...selectedTrades] : [];
+        await db.collection('users').doc(uid).set({ role, name, email, trades, createdAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+      } catch (e) { console.error(e); }
+    }
+
+    const TRADES = [
+      { id: 'electrical', label: 'Electrician', icon: '⚡' },
+      { id: 'plumbing', label: 'Plumber', icon: '🚰' },
+      { id: 'hvac', label: 'HVAC', icon: '❄️' },
+      { id: 'handyman', label: 'Handyman', icon: '🛠️' },
+      { id: 'carpentry', label: 'Carpenter', icon: '🪟' },
+      { id: 'painting', label: 'Painter', icon: '🎨' },
+      { id: 'cleaning', label: 'Cleaner', icon: '🏠' },
+      { id: 'landscaping', label: 'Landscaper', icon: '🌿' },
+      { id: 'mechanic', label: 'Mechanic', icon: '🔩' },
+      { id: 'welding', label: 'Welder', icon: '🔥' },
+      { id: 'masonry', label: 'Mason', icon: '🧱' },
+      { id: 'pest', label: 'Pest Control', icon: '🐛' },
+    ];
+    let selectedTrades = new Set();
+
+    function renderTradeGrid() {
+      const grid = document.getElementById('trade-grid');
+      grid.innerHTML = '';
+      TRADES.forEach(t => {
+        const card = document.createElement('div');
+        card.id = 'trade-' + t.id;
+        card.style.cssText = 'padding:12px 6px;border:2px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;transition:all .15s;font-size:.75rem;font-weight:500;color:var(--text-2)';
+        card.innerHTML = `<div style="font-size:1.4rem;margin-bottom:4px">${t.icon}</div>${t.label}`;
+        card.onclick = () => toggleTrade(t.id, card);
+        if (selectedTrades.has(t.id)) applyTradeActive(card, true);
+        grid.appendChild(card);
+      });
+    }
+
+    function toggleTrade(id, card) {
+      if (selectedTrades.has(id)) { selectedTrades.delete(id); applyTradeActive(card, false); }
+      else { selectedTrades.add(id); applyTradeActive(card, true); }
+    }
+
+    function applyTradeActive(card, on) {
+      card.style.borderColor = on ? 'var(--text)' : 'var(--border)';
+      card.style.background = on ? 'var(--text)' : 'var(--bg)';
+      card.style.color = on ? '#fff' : 'var(--text-2)';
+    }
+
+    function pickRole(role) {
+      selectedSignUpRole = role;
+      document.querySelectorAll('.role-pick-card').forEach(c => c.classList.remove('selected'));
+      document.getElementById('rpc-' + role).classList.add('selected');
+      setTimeout(() => {
+        document.getElementById('auth-step-1').classList.remove('active');
+        if (role === 'worker') { document.getElementById('auth-step-2').classList.add('active'); renderTradeGrid(); }
+        else { document.getElementById('auth-step-3').classList.add('active'); setAuthRoleTag(); isSignUp = false; updateAuthFormLabels(); }
+      }, 150);
+    }
+
+    function goBackToRolePick() {
+      document.getElementById('auth-step-2').classList.remove('active');
+      document.getElementById('auth-step-1').classList.add('active');
+      document.querySelectorAll('.role-pick-card').forEach(c => c.classList.remove('selected'));
+    }
+
+    function goToAuthForm() {
+      document.getElementById('auth-step-2').classList.remove('active');
+      document.getElementById('auth-step-3').classList.add('active');
+      setAuthRoleTag(); isSignUp = false; updateAuthFormLabels();
+    }
+
+    function goBackFromAuthForm() {
+      document.getElementById('auth-step-3').classList.remove('active');
+      if (selectedSignUpRole === 'worker') document.getElementById('auth-step-2').classList.add('active');
+      else document.getElementById('auth-step-1').classList.add('active');
+    }
+
+    function setAuthRoleTag() {
+      const tag = document.getElementById('auth-role-tag');
+      if (selectedSignUpRole === 'user') tag.innerHTML = '<span class="role-tag role-tag-user">🏠 Customer</span>';
+      else {
+        const tradeLabels = [...selectedTrades].map(id => TRADES.find(t => t.id === id)?.label).filter(Boolean).join(', ') || 'Professional';
+        tag.innerHTML = `<span class="role-tag role-tag-worker">🔧 ${tradeLabels}</span>`;
+      }
+    }
+
+    function updateAuthFormLabels() {
+      const tradeLabels = selectedSignUpRole === 'worker' && selectedTrades.size
+        ? [...selectedTrades].map(id => TRADES.find(t => t.id === id)?.label).join(', ')
+        : selectedSignUpRole === 'worker' ? 'Professional' : 'Customer';
+      document.getElementById('auth-modal-title').textContent = isSignUp ? 'Create Account' : 'Sign in';
+      document.getElementById('auth-modal-sub').textContent = isSignUp ? `Join as a ${tradeLabels}. It only takes a minute.` : 'Sign in to your account.';
+      document.getElementById('auth-btn').textContent = isSignUp ? 'Create Account' : 'Sign In';
+      document.getElementById('auth-switch-text').textContent = isSignUp ? 'Already have an account?' : "Don't have an account?";
+      document.getElementById('auth-switch-link').textContent = isSignUp ? 'Sign In' : 'Sign Up';
+    }
+
+    function toggleAuthMode() { isSignUp = !isSignUp; updateAuthFormLabels(); }
+
+    async function googleSignIn() {
+      try {
+        const result = await auth.signInWithPopup(googleProvider);
+        const user = result.user;
+        const doc = await db.collection('users').doc(user.uid).get();
+        if (!doc.exists) await saveUserRole(user.uid, selectedSignUpRole, user.displayName, user.email);
+        closeModal('modal-auth');
+        showToast('Signed in with Google ✓');
+      } catch (e) { if (e.code !== 'auth/popup-closed-by-user') showToast('Error: ' + e.message); }
+    }
+
+    async function emailAuth() {
+      const email = document.getElementById('auth-email').value.trim();
+      const pass = document.getElementById('auth-password').value;
+      if (!email || !pass) return showToast('Please fill in all fields.');
+      try {
+        if (isSignUp) {
+          const cred = await auth.createUserWithEmailAndPassword(email, pass);
+          await saveUserRole(cred.user.uid, selectedSignUpRole, email.split('@')[0], email);
+          showToast('Account created! Welcome to FixHub.');
+        } else {
+          await auth.signInWithEmailAndPassword(email, pass);
+          showToast('Welcome back!');
+        }
+        closeModal('modal-auth');
+      } catch (e) { showToast(e.message); }
+    }
+
+    function doSignOut() {
+      if (currentUser) localStorage.removeItem('fh_role_' + currentUser.uid);
+      auth.signOut();
+      showToast('Signed out.');
+    }
+
+    function showUserDash() {
+      showPage('page-user-dash');
+      const name = currentUser.displayName || currentUser.email?.split('@')[0] || 'User';
+      document.getElementById('user-nav-name').textContent = name;
+      document.getElementById('user-sidebar-name').textContent = name;
+      document.getElementById('user-avatar-u').textContent = name[0].toUpperCase();
+      loadUserBookings();
+      loadUserComplaints();
+    }
+
+    async function showWorkerDash() {
+      showPage('page-worker-dash');
+      const name = currentUser.displayName || currentUser.email?.split('@')[0] || 'Worker';
+      document.getElementById('worker-nav-name').textContent = name;
+      document.getElementById('worker-sidebar-name').textContent = name;
+      document.getElementById('user-avatar-w').textContent = name[0].toUpperCase();
+      const userDoc = await db.collection('users').doc(currentUser.uid).get();
+      if (userDoc.exists && userDoc.data().trades) {
+        const trades = userDoc.data().trades;
+        const tradeLabels = trades.map(id => TRADES.find(t => t.id === id)?.label).filter(Boolean).join(', ');
+        document.getElementById('worker-sidebar-specialty').textContent = tradeLabels || 'Professional';
+      } else {
+        document.getElementById('worker-sidebar-specialty').textContent = 'Professional';
+      }
+      if (userDoc.exists && userDoc.data().rating) {
+        document.getElementById('w-stat-rating').textContent = userDoc.data().rating + ' ⭐';
+        document.getElementById('w-stat-rating').nextElementSibling.textContent = '(' + (userDoc.data().reviewCount || 0) + ' reviews)';
+      }
+      loadWorkerAvailability();
+      loadWorkerJobs();
+    }
+
+    const ICONS = { Electrical: '⚡', Plumbing: '🚰', HVAC: '❄️', Handyman: '🛠️', Carpentry: '🪟', Painting: '🎨', Cleaning: '🏠', Landscaping: '🌿' };
+    const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    function loadUserBookings() {
+      const list = document.getElementById('user-bookings-list');
+      list.innerHTML = '<div class="empty-state"><p style="color:var(--text-3)">Loading...</p></div>';
+      db.collection('bookings')
+        .where('clientId', '==', currentUser.uid)
+        .onSnapshot(snap => {
+          const docs = [];
+          snap.forEach(doc => {
+            const d = doc.data();
+            console.log("Booking:", doc.id, d.status, d.workerName);
+            docs.push(doc);
+          });
+          docs.sort((a, b) => (b.data().createdAt?.toMillis?.() || 0) - (a.data().createdAt?.toMillis?.() || 0));
+          const total = docs.length;
+          let pending = 0, done = 0;
+          if (docs.length === 0) {
+            list.innerHTML = '<div class="empty-state"><div class="es-icon">📭</div><p>No bookings yet. Click "+ New Request" to get started!</p></div>';
+          } else {
+            list.innerHTML = '';
+            docs.forEach(doc => {
+              const d = doc.data();
+              if (d.status === 'pending') pending++;
+              if (d.status === 'completed') done++;
+              const dateStr = d.scheduledAt ? new Date(d.scheduledAt).toLocaleString() : (d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString() : '—');
+              const el = document.createElement('div');
+              el.className = 'job-item';
+              if (d.status === 'accepted') el.style.cssText = 'border-left:4px solid var(--blue)';
+              if (d.status === 'completed') el.style.cssText = 'border-left:4px solid var(--green)';
+              el.innerHTML = `
+                <div class="job-icon">${ICONS[d.type] || '🔧'}</div>
+                <div class="job-info">
+                  <div class="job-title">${d.type} ${d.workerName ? '· ' + d.workerName : ''}</div>
+                  ${d.status === 'accepted' ? `<div class="accepted-banner"><span class="pulse-dot"></span><span><strong>${d.workerName || 'A professional'}</strong> accepted your request${d.distance !== undefined ? ' (' + d.distance + ' km away)' : ''} — work is in progress!</span></div>` : ''}
+                  <div class="job-sub">${d.desc || 'No description'} · ${d.location || 'No location'}</div>
+                  ${d.imageUrls ? `<div style="display:flex;gap:4px;margin:4px 0">${d.imageUrls.map(img => `<img src="${img}" style="width:40px;height:40px;border-radius:4px;object-fit:cover">`).join('')}</div>` : ''}
+                  <div class="job-sub" style="font-size:.7rem">${dateStr}</div>
+                </div>
+                <div class="job-status" style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+                  <span class="badge badge-${d.status === 'accepted' ? 'inprogress' : (d.status || 'pending')}">${d.status === 'accepted' ? 'In Progress' : (d.status || 'pending')}</span>
+                  
+                  <div style="display:flex; gap:8px; margin-top:8px; justify-content:flex-end; width:100%">
+                    <button class="btn btn-track" style="font-size:.7rem; padding:6px 12px" onclick="trackBooking('${doc.id}')">📍 Track</button>
+                    ${d.status === 'accepted' ? `<button class="btn btn-outline" style="font-size:.7rem; padding:6px 12px" onclick="openRescheduleModal('${doc.id}')">⏰ Reschedule</button>` : ''}
+                    ${d.status === 'pending' || d.status === 'accepted' || d.status === 'rescheduling' ? `
+                      <button class="btn btn-cancel" style="font-size:.7rem; padding:6px 12px" onclick="cancelBooking('${doc.id}', '${d.status}')">✕ Cancel</button>
+                    ` : ''}
+                  </div>
+
+                  ${d.status === 'rescheduling' ? `
+                    <div class="reschedule-banner">
+                      <div class="rb-title">⏰ Reschedule Requested</div>
+                      <div style="font-size:12px">Proposed Time: <span class="rb-time">${new Date(d.proposedTime).toLocaleString()}</span></div>
+                      ${d.rescheduledBy !== currentUser.uid ? `
+                        <div style="display:flex; gap:8px; margin-top:4px">
+                          <button class="btn btn-primary" style="font-size:.7rem; padding:4px 10px; background:var(--green); border-color:var(--green)" onclick="handleRescheduleAction('${doc.id}', 'accept')">Accept</button>
+                          <button class="btn btn-ghost" style="font-size:.7rem; padding:4px 10px" onclick="handleRescheduleAction('${doc.id}', 'decline')">Decline</button>
+                        </div>
+                      ` : `<div style="font-size:11px; color:#92400e; font-style:italic">Waiting for professional's response...</div>`}
+                    </div>
+                  ` : ''}
+
+                  ${d.status === 'accepted' ? `
+                    <div style="display:flex;gap:6px;margin-top:10px">
+                      <button class="btn btn-primary" style="font-size:.8rem;padding:7px 14px;background:var(--blue);border-color:var(--blue)" onclick="window.ChatSystem.openChat('${doc.id}', '${d.workerName || 'Worker'}', '${(d.workerName || 'W').charAt(0).toUpperCase()}', '${d.type}', '${d.distance !== undefined ? d.distance : ''}')">💬 Chat</button>
+                    </div>
+                  ` : ''}
+                  ${d.status === 'completed' ? `
+                    <div style="font-size:.7rem;color:var(--green);font-weight:600;margin-bottom:6px;margin-top:10px">✓ Confirmed by you</div>
+                    ${!d.reviewed && d.workerId ? `<button class="btn btn-outline" style="font-size:.75rem;padding:4px 10px" onclick="openReviewModal('${doc.id}', '${d.workerId}')">⭐ Rate & Review</button>` : (d.reviewed ? `<div style="font-size:.7rem;color:var(--text-3);margin-top:10px">⭐ Reviewed</div>` : '')}
+                  ` : ''}
+                </div>
+              `;
+              list.appendChild(el);
+            });
+          }
+          document.getElementById('u-stat-total').textContent = total;
+          document.getElementById('u-stat-pending').textContent = pending;
+          document.getElementById('u-stat-done').textContent = done;
+        }, err => console.error(err));
+    }
+
+    // Upload images to Firebase Storage and return URLs
+    async function uploadImages(files, folderPath) {
+      const imageUrls = [];
+      for (let i = 0; i < Math.min(files.length, 5); i++) {
+        const file = files[i];
+        // Validate file is an image
+        if (!file.type.startsWith('image/')) continue;
+
+        try {
+          const timestamp = Date.now();
+          const randomId = Math.random().toString(36).substring(7);
+          const filename = `${timestamp}-${randomId}-${file.name}`;
+          const storagePath = `${folderPath}/${filename}`;
+
+          // Upload to Firebase Storage
+          const uploadTask = await storage.ref(storagePath).put(file);
+          const downloadUrl = await uploadTask.ref.getDownloadURL();
+          imageUrls.push(downloadUrl);
+        } catch (error) {
+          console.error('Image upload failed:', error);
+          showToast('Failed to upload image: ' + file.name);
+        }
+      }
+      return imageUrls;
+    }
+
+    function generateBookingId() {
+      const parts = [];
+      for (let i = 0; i < 2; i++) {
+        parts.push(Math.random().toString(36).substring(2, 6).toUpperCase());
+      }
+      return `FH-${parts[0]}-${parts[1]}`;
+    }
+
+    async function submitRequest(bookingId, data) {
+      await db.collection('bookings').doc(bookingId).set({
+        ...data,
+        id: bookingId,
+        status: 'pending',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+
+    function handleSubmit(bookingId, type, date, location) {
+      console.log("Showing confirmation for:", bookingId);
+      // Hide form, show confirmation
+      const formContent = document.getElementById('booking-form-content');
+      const confContent = document.getElementById('booking-confirmation-content');
+      
+      if (formContent && confContent) {
+        formContent.style.display = 'none';
+        confContent.style.display = 'block';
+      } else {
+        console.error("Modal content divs not found!");
+        showToast("Request submitted, but UI failed to update. Please refresh.");
+      }
+
+      // Fill confirmation details
+      document.getElementById('conf-booking-id').textContent = bookingId;
+      document.getElementById('conf-type').textContent = type;
+      document.getElementById('conf-date').textContent = date ? new Date(date).toLocaleString() : 'As soon as possible';
+      document.getElementById('conf-location').textContent = location;
+
+      // Wire up cancel button
+      const cancelBtn = document.getElementById('conf-cancel-btn');
+      if (cancelBtn) {
+        cancelBtn.onclick = async () => {
+          if (confirm('Are you sure you want to cancel this request?')) {
+            try {
+              await db.collection('bookings').doc(bookingId).delete();
+              showToast('Request cancelled.');
+              closeModal('modal-book');
+            } catch (e) { showToast('Error: ' + e.message); }
+          }
+        };
+      }
+    }
+
+    async function submitBooking() {
+      if (!currentUser) return openModal('modal-auth');
+      const type = document.getElementById('book-type').value;
+      const desc = document.getElementById('book-desc').value;
+      const location = document.getElementById('book-location').value;
+      const dateVal = document.getElementById('book-date').value;
+      const imageFiles = document.getElementById('book-images').files;
+      if (!desc || !location) return showToast('Please fill in description and location.');
+
+      const bookingId = generateBookingId();
+      console.log("Submitting booking:", bookingId);
+
+      try {
+        showToast('Submitting your request...');
+        
+        let userLat = null, userLon = null;
+        if (window.LocationSystem) {
+          try {
+            showToast('Getting location coordinates...');
+            const coords = await window.LocationSystem.getUserLocation();
+            userLat = coords.latitude;
+            userLon = coords.longitude;
+          } catch(err) {
+            console.warn('Location access denied or failed:', err);
+          }
+        }
+
+        // Upload images to Firebase Storage
+        const imageUrls = await uploadImages(imageFiles, `bookings/${currentUser.uid}/${bookingId}`);
+
+        const data = {
+          clientId: currentUser.uid,
+          clientName: currentUser.displayName || currentUser.email.split('@')[0],
+          clientEmail: currentUser.email,
+          type, desc, location,
+          imageUrls: imageUrls.length ? imageUrls : null,
+          scheduledAt: dateVal || null,
+          jobLat: userLat,
+          jobLon: userLon
+        };
+
+        await submitRequest(bookingId, data);
+        console.log("Firestore entry created ✓");
+        
+        // Send free confirmation email via EmailJS (client-side)
+        if (window.EmailService) {
+          console.log("Triggering EmailService...");
+          window.EmailService.sendBookingConfirmation(
+            { email: currentUser.email, name: currentUser.displayName },
+            data,
+            bookingId
+          );
+        }
+        
+        // Reset form fields
+        document.getElementById('book-desc').value = '';
+        document.getElementById('book-location').value = '';
+        document.getElementById('book-date').value = '';
+        document.getElementById('book-images').value = '';
+
+        handleSubmit(bookingId, type, dateVal, location);
+      } catch (e) { 
+        console.error("Booking submission error:", e);
+        showToast('Failed: ' + e.message); 
+      }
+    }
+
+    function loadWorkerJobs() {
+      const list = document.getElementById('worker-jobs-list');
+      const oppsList = document.getElementById('worker-opps-list');
+
+      db.collection('bookings')
+        .where('workerId', '==', currentUser.uid)
+        .onSnapshot(snap => {
+          let assigned = 0, completed = 0, earnings = 0;
+          const last7 = Array(7).fill(0);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          if (snap.empty) {
+            list.innerHTML = '<div class="empty-state"><div class="es-icon">🔧</div><p>No active jobs. Check opportunities below!</p></div>';
+          } else {
+            list.innerHTML = '';
+              snap.forEach(doc => {
+                const d = doc.data();
+                const id = doc.id;
+                assigned++;
+                if (d.status === 'completed') {
+                  completed++;
+                  // Calculate 85% EARNING (Subtracting 15% platform fee)
+                  const totalAmount = Number(d.pay || SERVICE_RATES[d.type] || 500);
+                  const netEarning = Math.round(totalAmount * 0.85);
+                  earnings += netEarning;
+                  const ts = d.completedAt?.toDate ? d.completedAt.toDate() : null;
+                  if (ts) {
+                    const diff = Math.floor((today - new Date(ts.toDateString())) / 86400000);
+                    if (diff >= 0 && diff < 7) last7[6 - diff] += netEarning;
+                  }
+                }
+                const dateStr = d.scheduledAt ? new Date(d.scheduledAt).toLocaleString() : 'Asap';
+                const el = document.createElement('div');
+                el.className = 'job-item';
+                if (d.status === 'accepted') el.style.cssText = 'border-left:4px solid #c2410c';
+                el.innerHTML = `
+                  <div class="job-icon">${ICONS[d.type] || '🔧'}</div>
+                  <div class="job-info">
+                    <div class="job-title">${d.type} · ${d.clientName || 'Customer'}</div>
+                    <div class="job-sub">${d.desc}</div>
+                    ${d.imageUrls ? `<div style="display:flex;gap:4px;margin:4px 0">${d.imageUrls.map(img => `<img src="${img}" style="width:40px;height:40px;border-radius:4px;object-fit:cover">`).join('')}</div>` : ''}
+                    <div class="job-sub" style="color:var(--text);font-weight:500">📍 ${d.location} · 📅 ${dateStr}</div>
+                    ${d.status === 'accepted' ? `<div class="inprogress-label"><span class="pulse-dot"></span>Work in progress — mark as paid when job is finished</div>` : ''}
+                    ${d.status === 'completed' ? `<div style="font-size:.72rem;color:var(--green);margin-top:4px;font-weight:600">✓ Completed · ₹${Math.round(Number(d.pay || SERVICE_RATES[d.type] || 500) * 0.85)} earned</div>` : ''}
+                </div>
+                <div class="job-status" style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+                  ${d.status === 'accepted' ? `<span class="badge badge-inprogress">In Progress</span>` : `<span class="badge badge-${d.status}">${d.status}</span>`}
+                  
+                  <div style="display:flex; gap:6px; margin-top:4px">
+                    ${d.status === 'accepted' ? `<button class="btn btn-outline" style="font-size:.7rem; padding:6px 12px" onclick="openRescheduleModal('${doc.id}')">⏰ Reschedule</button>` : ''}
+                    ${d.status === 'accepted' ? `<button class="btn btn-primary" style="font-size:.75rem;padding:6px 16px;background:var(--blue);border-color:var(--blue)" onclick="window.ChatSystem.openChat('${doc.id}', '${d.clientName || 'Customer'}', '${(d.clientName || 'C').charAt(0).toUpperCase()}', '${d.type}', '${d.distance !== undefined ? d.distance : ''}')">💬 Chat</button>` : ''}
+                    ${d.status === 'accepted' ? `<button class="btn btn-primary" style="font-size:.75rem;padding:6px 16px;background:var(--green);border-color:var(--green)" onclick="markJobPaid('${doc.id}')">💰 Mark Paid & Completed</button>` : ''}
+                  </div>
+
+                  ${d.status === 'rescheduling' ? `
+                    <div class="reschedule-banner" style="width:100%; text-align:left">
+                      <div class="rb-title">⏰ Reschedule Requested</div>
+                      <div style="font-size:12px">Proposed Time: <span class="rb-time">${new Date(d.proposedTime).toLocaleString()}</span></div>
+                      ${d.rescheduledBy !== currentUser.uid ? `
+                        <div style="display:flex; gap:8px; margin-top:4px">
+                          <button class="btn btn-primary" style="font-size:.7rem; padding:4px 10px; background:var(--green); border-color:var(--green)" onclick="handleRescheduleAction('${doc.id}', 'accept')">Accept</button>
+                          <button class="btn btn-ghost" style="font-size:.7rem; padding:4px 10px" onclick="handleRescheduleAction('${doc.id}', 'decline')">Decline</button>
+                        </div>
+                      ` : `<div style="font-size:11px; color:#92400e; font-style:italic">Waiting for customer's response...</div>`}
+                    </div>
+                  ` : ''}
+                </div>
+              `;
+              list.appendChild(el);
+            });
+          }
+          document.getElementById('w-stat-jobs').textContent = assigned;
+          document.getElementById('w-stat-done').textContent = completed;
+          document.getElementById('w-stat-earnings').textContent = '₹' + earnings;
+          // Rating is updated in showWorkerDash directly to reflect average
+          // But if no rating is set, default to completed jobs or New
+          const ratingEl = document.getElementById('w-stat-rating');
+          if (ratingEl && ratingEl.textContent === '—') ratingEl.textContent = completed > 0 ? completed + ' jobs' : 'New';
+          drawEarningsChart(last7);
+        });
+
+      db.collection('users').doc(currentUser.uid).get().then(userDoc => {
+        const trades = userDoc.data()?.trades || [];
+        if (!trades.length) return;
+        const formattedTrades = trades.map(t => t.charAt(0).toUpperCase() + t.slice(1));
+        db.collection('bookings')
+          .where('status', '==', 'pending')
+          .where('type', 'in', formattedTrades)
+          .onSnapshot(async snap => {
+            let ignored = [];
+            let workerLocation = null;
+            try {
+              const userDoc2 = await db.collection('users').doc(currentUser.uid).get();
+              ignored = userDoc2.data()?.rejectedJobs || [];
+              if (window.LocationSystem) {
+                 try {
+                    workerLocation = await window.LocationSystem.getUserLocation();
+                 } catch(e) { console.log('Worker location access denied:', e); }
+              }
+            } catch (e) { ignored = []; }
+            let activeRequests = [];
+            snap.forEach(doc => { if (!ignored.includes(doc.id)) activeRequests.push({ id: doc.id, ...doc.data() }); });
+            
+            if (workerLocation && window.LocationSystem) {
+               activeRequests = await window.LocationSystem.getJobsNearby(workerLocation.latitude, workerLocation.longitude, 15, activeRequests);
+            }
+            const badge = document.getElementById('w-badge-reqs');
+            const mobileBadge = document.getElementById('w-badge-reqs-mobile');
+            if (activeRequests.length > 0) {
+              badge.textContent = activeRequests.length; badge.style.display = 'inline-flex';
+              if (mobileBadge) { mobileBadge.textContent = activeRequests.length; mobileBadge.style.display = 'flex'; }
+            }
+            else {
+              badge.style.display = 'none';
+              if (mobileBadge) mobileBadge.style.display = 'none';
+            }
+            if (activeRequests.length === 0) {
+              oppsList.innerHTML = '<div class="empty-state"><p>No new requests available at the moment.</p></div>';
+            } else {
+              oppsList.innerHTML = '';
+              activeRequests.forEach(d => {
+                const id = d.id;
+                const el = document.createElement('div');
+                el.className = 'job-item';
+                el.style.borderLeft = '4px solid var(--blue)';
+                el.innerHTML = `
+                  <div class="job-icon">${ICONS[d.type] || '🔧'}</div>
+                  <div class="job-info">
+                    <div class="job-title">${d.type} Request · ${d.clientName || 'New Client'}</div>
+                    <div class="job-sub">${d.desc}</div>
+                    ${d.imageUrls ? `<div style="display:flex;gap:4px;margin:4px 0">${d.imageUrls.map(img => `<img src="${img}" style="width:40px;height:40px;border-radius:4px;object-fit:cover">`).join('')}</div>` : ''}
+                    <div class="job-sub">📍 ${d.distance !== undefined ? `<span style="color:var(--green);font-weight:600">${d.distance} km away</span> • ` : ''}${d.location}</div>
+                  </div>
+                  <div class="nav-actions">
+                    <button class="btn btn-primary" onclick="acceptJob('${id}', ${d.distance !== undefined ? d.distance : 'null'})">Accept</button>
+                    <button class="btn btn-ghost" onclick="rejectJob('${id}')">Reject</button>
+                  </div>
+                `;
+                oppsList.appendChild(el);
+              });
+            }
+          }, err => console.error('Error fetching opportunities:', err));
+      });
+    }
+
+    async function acceptJob(jobId, distance) {
+      try {
+        const name = currentUser.displayName || currentUser.email.split('@')[0];
+        const email = currentUser.email;
+
+        const updateData = {
+          status: 'accepted', 
+          workerId: currentUser.uid, 
+          workerName: name,
+          workerEmail: email,
+          acceptedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        if (distance !== undefined && distance !== null) {
+          updateData.distance = distance;
+        }
+
+        await db.collection('bookings').doc(jobId).update(updateData);
+
+        // Notify Customer & Worker via Email
+        const jobDoc = await db.collection('bookings').doc(jobId).get();
+        const jobData = jobDoc.data();
+
+        if (window.EmailService) {
+          // Notify Customer
+          if (jobData.clientEmail) {
+            window.EmailService.sendCustomerAcceptance(
+              { email: jobData.clientEmail, name: jobData.clientName || 'Customer' }, 
+              jobData, 
+              { name, id: currentUser.uid }, 
+              jobId
+            );
+          }
+          // Notify Worker
+          window.EmailService.sendWorkerAcceptance({ email: currentUser.email, name }, jobData, jobId);
+        }
+
+        showToast('Job accepted! It is now in your active list. ✓');
+      } catch (e) { showToast('Error: ' + e.message); }
+    }
+
+    const SERVICE_RATES = { Electrical: 800, Plumbing: 700, HVAC: 1200, Handyman: 500, Carpentry: 900, Painting: 600, Cleaning: 400, Landscaping: 550 };
+
+    async function markJobPaid(jobId) {
+      if (!confirm('This will mark the job as PAID and COMPLETED. Ensure you have received the cash/UPI payment from the customer. Proceed?')) return;
+      try {
+        const jobDoc = await db.collection('bookings').doc(jobId).get();
+        const d = jobDoc.data();
+        if (!d) return;
+
+        const amount = SERVICE_RATES[d.type] || 500;
+        const platformFee = Math.round(amount * 0.15);
+        const workerEarning = amount - platformFee;
+        const receiptId = 'RCP-' + Date.now();
+
+        const batch = db.batch();
+        const bookingRef = db.collection('bookings').doc(jobId);
+        const receiptRef = db.collection('receipts').doc(receiptId);
+
+        batch.update(bookingRef, { status: 'completed', paid: true, pay: amount, completedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        batch.set(receiptRef, {
+          receiptId,
+          bookingId: jobId,
+          customerName: d.clientName || 'Customer',
+          workerName: d.workerName || 'Worker',
+          serviceType: d.type,
+          amount,
+          platformFee,
+          workerEarning,
+          paymentMethod: 'cash',
+          paidAt: firebase.firestore.FieldValue.serverTimestamp(),
+          address: d.location
+        });
+
+        await batch.commit();
+        showToast('Job marked as paid and completed! Receipt generated. ✓');
+
+        // Post system message to chat
+        if (window.ChatSystem) {
+          window.ChatSystem.postSystemMessage(jobId, `${d.workerName} marked the job as paid. Receipt ${receiptId} generated.`);
+        }
+
+        // Notify via Email
+        if (window.EmailService) {
+          // Notify Customer
+          if (d.clientEmail) {
+            window.EmailService.sendCustomerCompletion({ email: d.clientEmail, name: d.clientName }, d, jobId, d.workerName, amount);
+          }
+          // Notify Worker
+          if (d.workerEmail) {
+            window.EmailService.sendWorkerCompletion({ email: d.workerEmail, name: d.workerName }, d, jobId, amount, workerEarning);
+          }
+        }
+      } catch (e) {
+        showToast('Error: ' + e.message);
+      }
+    }
+
+    function openReviewModal(bookingId, workerId) {
+      document.getElementById('review-booking-id').value = bookingId;
+      document.getElementById('review-worker-id').value = workerId;
+      document.getElementById('review-rating').value = '5';
+      document.getElementById('review-comment').value = '';
+      openModal('modal-review');
+    }
+
+    async function submitReviewForm() {
+      const bookingId = document.getElementById('review-booking-id').value;
+      const workerId = document.getElementById('review-worker-id').value;
+      const rating = parseInt(document.getElementById('review-rating').value, 10);
+      const comment = document.getElementById('review-comment').value.trim();
+
+      try {
+        await submitReview(bookingId, workerId, rating, comment);
+        closeModal('modal-review');
+        showToast('Thank you for your review! ✓');
+        // Reload bookings to hide review button
+        loadUserBookings();
+      } catch (e) {
+        showToast('Error: ' + e.message);
+      }
+    }
+
+    async function submitReview(bookingId, workerId, rating, comment) {
+      await db.collection("reviews").add({
+        bookingId,
+        workerId,
+        customerId: currentUser.uid,
+        rating,
+        comment,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      // Mark that booking has been reviewed
+      await db.collection("bookings").doc(bookingId).update({
+        reviewed: true
+      });
+
+      await updateWorkerRating(workerId);
+
+      // Notify Worker about new review
+      if (window.EmailService) {
+        const workerDoc = await db.collection('users').doc(workerId).get();
+        if (workerDoc.exists) {
+          const customerName = currentUser.displayName || currentUser.email.split('@')[0];
+          window.EmailService.sendReviewNotification(workerDoc.data(), customerName, rating, comment, bookingId);
+        }
+      }
+    }
+
+    async function updateWorkerRating(workerId) {
+      try {
+        const reviewsSnap = await db.collection("reviews").where("workerId", "==", workerId).get();
+        if (reviewsSnap.empty) return;
+
+        let totalRating = 0;
+        let count = 0;
+        reviewsSnap.forEach(doc => {
+          totalRating += doc.data().rating;
+          count++;
+        });
+
+        const avgRating = count > 0 ? (totalRating / count).toFixed(1) : 0;
+
+        await db.collection("users").doc(workerId).update({
+          rating: parseFloat(avgRating),
+          reviewCount: count
+        });
+      } catch (e) {
+        console.error("Error updating worker rating:", e);
+      }
+    }
+
+    async function rejectJob(jobId) {
+      try {
+        await db.collection('users').doc(currentUser.uid).set({ rejectedJobs: firebase.firestore.FieldValue.arrayUnion(jobId) }, { merge: true });
+        showToast('Request skipped. You will no longer see this request.');
+        loadWorkerJobs();
+      } catch (e) { showToast('Error: ' + e.message); }
+    }
+
+    async function submitComplaintForm() {
+      if (!currentUser) return;
+      const category = document.getElementById('comp-category').value;
+      const worker = document.getElementById('comp-worker').value;
+      const message = document.getElementById('comp-message').value.trim();
+      const mediaFiles = document.getElementById('comp-media').files;
+
+      if (!category || !message) return showToast('Please select a category and enter details.');
+
+      try {
+        // Upload media to Firebase Storage
+        const mediaUrls = await uploadImages(mediaFiles, `complaints/${currentUser.uid}/${Date.now()}`);
+
+        const compRef = await db.collection("complaints").add({
+          userId: currentUser.uid,
+          userEmail: currentUser.email,
+          userName: currentUser.displayName || currentUser.email.split('@')[0],
+          userRole: currentRole || 'user',
+          category,
+          workerAppointed: worker || 'None',
+          message,
+          mediaUrls: mediaUrls.length ? mediaUrls : null,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        const compId = compRef.id;
+
+        closeModal('modal-complaint');
+        document.getElementById('comp-category').value = '';
+        document.getElementById('comp-worker').value = '';
+        document.getElementById('comp-message').value = '';
+        document.getElementById('comp-media').value = '';
+        // Notify user via Email
+        if (window.EmailService) {
+          window.EmailService.sendComplaintReceived({ name: currentUser.displayName || currentUser.email.split('@')[0], email: currentUser.email }, { id: compId, category });
+        }
+
+        showToast('Your complaint has been submitted to the admin team.');
+      } catch (e) {
+        showToast('Error: ' + e.message);
+      }
+    }
+
+    async function populateWorkerDropdown() {
+      const workerSelect = document.getElementById('comp-worker');
+      if (!workerSelect || !currentUser) return;
+
+      // Default option
+      workerSelect.innerHTML = '<option value="">Select Worker (if applicable)</option>';
+
+      try {
+        // Fetch bookings where the current user is the client
+        const bookingsSnap = await db.collection('bookings')
+          .where('clientId', '==', currentUser.uid)
+          .get();
+
+        const workers = new Map(); // Use Map to avoid duplicates
+
+        bookingsSnap.forEach(doc => {
+          const d = doc.data();
+          if (d.workerId && d.workerName) {
+            workers.set(d.workerId, d.workerName);
+          }
+        });
+
+        workers.forEach((name, id) => {
+          const opt = document.createElement('option');
+          opt.value = name; // Storing name as requested "worker that was appointed"
+          opt.textContent = name;
+          workerSelect.appendChild(opt);
+        });
+      } catch (e) {
+        console.error("Error populating worker dropdown:", e);
+      }
+    }
+
+    function loadUserComplaints() {
+      const list = document.getElementById('user-complaints-list');
+      if (!list) return;
+      list.innerHTML = '<div class="job-sub">Loading complaints...</div>';
+
+      db.collection('complaints')
+        .where('userId', '==', currentUser.uid)
+        .onSnapshot(snap => {
+          if (snap.empty) {
+            list.innerHTML = '<div class="empty-state"><p>No complaints filed.</p></div>';
+            return;
+          }
+          list.innerHTML = '';
+          snap.docs.forEach(doc => {
+            const c = doc.data();
+            const el = document.createElement('div');
+            el.className = 'job-item';
+            el.style.borderLeft = `4px solid ${c.resolved ? 'var(--green)' : 'var(--red)'}`;
+            el.innerHTML = `
+              <div class="job-icon">⚠️</div>
+              <div class="job-info">
+                <div class="job-title">${c.category} · ${c.resolved ? 'Resolved' : 'Open'}</div>
+                <div class="job-sub">${c.message}</div>
+                ${c.adminNote ? `<div style="margin-top:8px;padding:8px;background:var(--blue-bg);border-radius:4px;font-size:.75rem"><strong>Admin:</strong> ${c.adminNote}</div>` : ''}
+              </div>
+              <div class="job-status">
+                <span class="badge ${c.resolved ? 'badge-completed' : 'badge-pending'}">${c.resolved ? 'Resolved' : 'Open'}</span>
+              </div>
+            `;
+            list.appendChild(el);
+          });
+        }, err => console.error(err));
+    }
+
+    function loadWorkerAvailability() {
+      db.collection('users').doc(currentUser.uid).get().then(doc => {
+        const available = doc.exists ? (doc.data().available !== false) : true;
+        document.getElementById('avail-toggle').checked = available;
+        document.getElementById('avail-label').textContent = available ? 'Available for new jobs' : 'Currently unavailable';
+      }).catch(console.error);
+    }
+
+    function updateAvailability() {
+      const on = document.getElementById('avail-toggle').checked;
+      document.getElementById('avail-label').textContent = on ? 'Available for new jobs' : 'Currently unavailable';
+      db.collection('users').doc(currentUser.uid).set({ available: on }, { merge: true }).catch(console.error);
+      showToast(on ? 'You are now available ✓' : 'You are now unavailable');
+    }
+
+    function drawEarningsChart(data) {
+      const container = document.getElementById('earningsChart');
+      if (!container) return;
+      container.innerHTML = '';
+      const maxVal = Math.max(...data, 1);
+      const today = new Date();
+      data.forEach((val, i) => {
+        const d = new Date(today);
+        d.setDate(today.getDate() - (6 - i));
+        const dayLabel = DAYS[d.getDay()];
+        const heightPct = Math.round((val / maxVal) * 100);
+        const wrap = document.createElement('div');
+        wrap.className = 'chart-bar-wrap';
+        wrap.title = `₹${val}`;
+        wrap.innerHTML = `
+          <div style="flex:1;width:100%;display:flex;align-items:flex-end">
+            <div class="cbar" style="height:${heightPct}%;min-height:${val > 0 ? 4 : 0}px;width:100%;opacity:${i === 6 ? 1 : 0.5}"></div>
+          </div>
+          <div class="cbar-label">${dayLabel}</div>
+        `;
+        container.appendChild(wrap);
+      });
+    }
+
+    function showUserSection(sec) {
+      const sections = ['bookings', 'profile', 'settings'];
+      sections.forEach(s => {
+        const el = document.getElementById('u-section-' + s);
+        if (el) el.style.display = (s === sec ? 'block' : 'none');
+        // Sidebar nav
+        const nav = document.getElementById('unav-' + s);
+        if (nav) nav.classList.toggle('active', s === sec);
+        // Mobile bottom nav
+        const mnav = document.getElementById('mnav-u-' + s);
+        if (mnav) mnav.classList.toggle('active', s === sec);
+      });
+      // Load section-specific data
+      if (sec === 'profile') loadUserProfile();
+      if (sec === 'settings') loadSettingsState();
+    }
+
+    function loadUserProfile() {
+      if (!currentUser) return;
+      const name = currentUser.displayName || currentUser.email?.split('@')[0] || 'User';
+      document.getElementById('profile-avatar').textContent = name[0].toUpperCase();
+      document.getElementById('profile-name').textContent = name;
+      document.getElementById('profile-email').textContent = currentUser.email || '—';
+      document.getElementById('profile-edit-name').value = currentUser.displayName || '';
+      document.getElementById('profile-role-badge').textContent = currentRole === 'worker' ? 'Professional' : 'Customer';
+
+      // Member since
+      const created = currentUser.metadata?.creationTime;
+      document.getElementById('profile-joined').textContent = created ? new Date(created).toLocaleDateString() : '—';
+
+      // Total bookings count
+      db.collection('bookings').where('clientId', '==', currentUser.uid).get().then(snap => {
+        document.getElementById('profile-total-bookings').textContent = snap.size;
+      }).catch(() => {});
+    }
+
+    async function updateDisplayName() {
+      const newName = document.getElementById('profile-edit-name').value.trim();
+      if (!newName) return showToast('Please enter a name.');
+      try {
+        await currentUser.updateProfile({ displayName: newName });
+        await db.collection('users').doc(currentUser.uid).set({ name: newName }, { merge: true });
+        // Update sidebar and nav
+        document.getElementById('user-nav-name').textContent = newName;
+        document.getElementById('user-sidebar-name').textContent = newName;
+        document.getElementById('user-avatar-u').textContent = newName[0].toUpperCase();
+        document.getElementById('profile-avatar').textContent = newName[0].toUpperCase();
+        document.getElementById('profile-name').textContent = newName;
+        showToast('Display name updated! ✓');
+      } catch (e) { showToast('Error: ' + e.message); }
+    }
+
+    function loadSettingsState() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      document.getElementById('settings-dark-toggle').checked = isDark;
+      // Load notif prefs from localStorage
+      const emailNotif = localStorage.getItem('fh_email_notif') !== 'false';
+      document.getElementById('settings-email-notif').checked = emailNotif;
+    }
+
+    function toggleThemeFromSettings() {
+      toggleTheme();
+    }
+
+    function saveNotifPrefs() {
+      const emailOn = document.getElementById('settings-email-notif').checked;
+      localStorage.setItem('fh_email_notif', emailOn);
+      showToast(emailOn ? 'Email notifications enabled ✓' : 'Email notifications disabled');
+    }
+
+    function showWorkerSection(sec) {
+      const sections = ['jobs', 'reqs', 'earnings', 'profile'];
+      sections.forEach(s => {
+        const el = document.getElementById('w-section-' + s);
+        if (el) el.style.display = (s === sec ? 'block' : 'none');
+        
+        const navId = 'wnav-' + s;
+        const navEl = document.getElementById(navId);
+        if(navEl) navEl.classList.toggle('active', s === sec);
+      });
+
+      // Sync mobile bottom nav
+      const mJobs = document.getElementById('mnav-w-jobs');
+      const mReqs = document.getElementById('mnav-w-reqs');
+      if (mJobs) mJobs.classList.toggle('active', sec === 'jobs');
+      if (mReqs) mReqs.classList.toggle('active', sec === 'reqs');
+
+      if (sec === 'profile') loadWorkerProfile();
+    }
+
+    function loadWorkerProfile() {
+      if (!currentUser) return;
+      const name = currentUser.displayName || currentUser.email?.split('@')[0] || 'Worker';
+      document.getElementById('w-profile-avatar').textContent = name[0].toUpperCase();
+      document.getElementById('w-profile-name').textContent = name;
+      document.getElementById('w-profile-email').textContent = currentUser.email || '—';
+      document.getElementById('w-profile-edit-name').value = currentUser.displayName || '';
+
+      const created = currentUser.metadata?.creationTime;
+      document.getElementById('w-profile-joined').textContent = created ? new Date(created).toLocaleDateString() : '—';
+
+      db.collection('bookings').where('workerId', '==', currentUser.uid).get().then(snap => {
+        document.getElementById('w-profile-total-bookings').textContent = snap.size;
+      }).catch(() => {});
+    }
+
+    async function updateDisplayNameWorker() {
+      const newName = document.getElementById('w-profile-edit-name').value.trim();
+      if (!newName) return showToast('Please enter a name.');
+      try {
+        await currentUser.updateProfile({ displayName: newName });
+        await db.collection('users').doc(currentUser.uid).set({ name: newName }, { merge: true });
+        
+        document.getElementById('worker-sidebar-name').textContent = newName;
+        document.getElementById('user-avatar-w').textContent = newName[0].toUpperCase();
+        document.getElementById('w-profile-avatar').textContent = newName[0].toUpperCase();
+        document.getElementById('w-profile-name').textContent = newName;
+        
+        showToast('Display name updated! ✓');
+      } catch (e) { showToast('Error: ' + e.message); }
+    }
+
+    function showPage(id) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      window.scrollTo(0, 0);
+    }
+
+    function openModal(id) {
+      if (id === 'modal-auth') {
+        document.getElementById('auth-step-1').classList.add('active');
+        document.getElementById('auth-step-2').classList.remove('active');
+        document.getElementById('auth-step-3').classList.remove('active');
+        document.querySelectorAll('.role-pick-card').forEach(c => c.classList.remove('selected'));
+        document.getElementById('auth-email').value = '';
+        document.getElementById('auth-password').value = '';
+        selectedTrades.clear();
+      }
+      if (id === 'modal-complaint') populateWorkerDropdown();
+      document.getElementById(id).classList.add('open');
+    }
+    function closeModal(id) { 
+      document.getElementById(id).classList.remove('open'); 
+      if (id === 'modal-book') {
+        setTimeout(() => {
+          document.getElementById('booking-form-content').style.display = 'block';
+          document.getElementById('booking-confirmation-content').style.display = 'none';
+        }, 300);
+      }
+    }
+    document.querySelectorAll('.modal-overlay').forEach(o => {
+      o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+    });
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    function hideLoading() {
+      const el = document.getElementById('loading');
+      el.style.opacity = '0';
+      setTimeout(() => el.style.display = 'none', 400);
+    }
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+    }
+
+    async function cancelBooking(id, status) {
+      const msg = status === 'accepted' ? 
+        'This job is already in progress. Are you sure you want to cancel? This may affect your service record.' : 
+        'Are you sure you want to cancel this request?';
+      
+      if (!confirm(msg)) return;
+      
+      try {
+        const bookingRef = db.collection('bookings').doc(id);
+        const doc = await bookingRef.get();
+        if (!doc.exists) throw new Error('Booking not found');
+        const data = doc.data();
+
+        await bookingRef.update({
+          status: 'cancelled',
+          cancelledAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        showToast('Booking cancelled successfully.');
+
+        // Trigger Email Notifications
+        if (window.EmailService) {
+          const cancelledBy = currentUser.uid === data.clientId ? 'Customer' : 'Professional';
+          
+          // Notify Customer
+          const custEmail = data.clientEmail || (currentUser.uid === data.clientId ? currentUser.email : null);
+          const custName = data.clientName || (currentUser.uid === data.clientId ? (currentUser.displayName || currentUser.email.split('@')[0]) : 'Customer');
+          
+          if (custEmail) {
+            window.EmailService.sendBookingCancellation(
+              { email: custEmail, name: custName },
+              data,
+              id,
+              cancelledBy
+            );
+          }
+
+          // Notify Worker if assigned
+          if (data.workerId && data.workerEmail) {
+             window.EmailService.sendBookingCancellation(
+                { email: data.workerEmail, name: data.workerName || 'Professional' },
+                data,
+                id,
+                cancelledBy
+             );
+          }
+        }
+
+      } catch (e) {
+        showToast('Error cancelling booking: ' + e.message);
+      }
+    }
+
+    async function trackBooking(id) {
+      const trackIdDisplay = document.getElementById('track-id-display');
+      const trackingContent = document.getElementById('tracking-content');
+      
+      if (!trackIdDisplay || !trackingContent) return;
+      
+      trackIdDisplay.textContent = 'Loading...';
+      trackingContent.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-3)">Fetching status...</div>';
+      
+      // Use the existing openModal function
+      openModal('modal-track');
+      
+      try {
+        const doc = await db.collection('bookings').doc(id).get();
+        if (!doc.exists) throw new Error('Booking not found.');
+        
+        const d = doc.data();
+        trackIdDisplay.textContent = d.id || id;
+        
+        const steps = [
+          { key: 'submitted', title: 'Request Submitted', desc: 'Your request was successfully received.' },
+          { key: 'matching', title: 'Matching Professional', desc: 'Finding the best pro in your area.' },
+          { key: 'assigned', title: 'Pro Assigned', desc: d.workerName ? `${d.workerName} is assigned to your request.` : 'A professional has been assigned.' },
+          { key: 'progress', title: 'Fix in Progress', desc: 'The professional is working on your issue.' },
+          { key: 'done', title: 'Completed', desc: 'Service has been marked as complete.' }
+        ];
+        
+        let currentStepIndex = 0;
+        if (d.status === 'pending') currentStepIndex = 1;
+        if (d.status === 'accepted') currentStepIndex = 2; 
+        if (d.status === 'rescheduling') currentStepIndex = 2; // Keep at Assigned but middle of process
+        if (d.status === 'in-progress') currentStepIndex = 3;
+        if (d.status === 'completed') currentStepIndex = 4;
+        if (d.status === 'cancelled') currentStepIndex = -1;
+        
+        trackingContent.innerHTML = steps.map((s, i) => {
+          let statusClass = '';
+          if (i < currentStepIndex) statusClass = 'done';
+          else if (i === currentStepIndex) statusClass = 'active';
+          
+          let icon = i < currentStepIndex ? '✓' : (i + 1);
+          if (d.status === 'cancelled') {
+             statusClass = '';
+             icon = i + 1;
+          }
+
+          return `
+            <div class="tracking-step ${statusClass}">
+              <div class="ts-icon">${icon}</div>
+              <div class="ts-content">
+                <div class="ts-title">${s.title}</div>
+                <div class="ts-desc">${statusClass === 'active' ? (i === 1 ? 'Current Stage: Still matching...' : s.desc) : s.desc}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+        
+        if (d.status === 'rescheduling') {
+           trackingContent.innerHTML = `
+            <div style="text-align:center; padding:15px; color:#92400e; background:#fffbeb; border-radius:12px; margin-bottom:20px; border:1px solid #fef3c7">
+              <div style="font-size:18px; margin-bottom:5px">⏰ Reschedule Requested</div>
+              <div style="font-size:12px">Waiting for confirmation of new time: <strong>${new Date(d.proposedTime).toLocaleString()}</strong></div>
+            </div>
+          ` + trackingContent.innerHTML;
+        }
+
+        if (d.status === 'cancelled') {
+          trackingContent.innerHTML = `
+            <div style="text-align:center; padding:20px; color:#dc2626; background:#fef2f2; border-radius:12px; margin-bottom:20px">
+              <div style="font-size:24px; margin-bottom:10px">✕</div>
+              <div style="font-weight:600">Booking Cancelled</div>
+              <div style="font-size:12px">This request is no longer active.</div>
+            </div>
+          ` + trackingContent.innerHTML;
+        }
+
+      } catch (e) {
+        trackingContent.innerHTML = `<div style="color:#dc2626; padding:20px; text-align:center">${e.message}</div>`;
+      }
+    }
+
+    /* Rescheduling Logic */
+    let currentRescheduleId = null;
+
+    function openRescheduleModal(id) {
+      currentRescheduleId = id;
+      document.getElementById('reschedule-date').value = '';
+      openModal('modal-reschedule');
+      
+      const submitBtn = document.getElementById('reschedule-submit-btn');
+      submitBtn.onclick = () => submitReschedule(id);
+    }
+
+    async function submitReschedule(id) {
+      const newTime = document.getElementById('reschedule-date').value;
+      if (!newTime) return showToast('Please select a new date and time.');
+      
+      try {
+        const bookingRef = db.collection('bookings').doc(id);
+        const doc = await bookingRef.get();
+        const data = doc.data();
+
+        await bookingRef.update({
+          status: 'rescheduling',
+          proposedTime: newTime,
+          rescheduledBy: currentUser.uid,
+          rescheduleRequestedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Notify both parties
+        if (window.EmailService) {
+           const requesterName = currentUser.displayName || (currentUser.uid === data.clientId ? data.clientName : data.workerName) || 'The other party';
+           
+           // Notify Customer
+           const custEmail = data.clientEmail || (currentUser.uid === data.clientId ? currentUser.email : null);
+           const custName = data.clientName || (currentUser.uid === data.clientId ? (currentUser.displayName || currentUser.email.split('@')[0]) : 'Customer');
+           if (custEmail) {
+             window.EmailService.sendRescheduleRequest(
+               { email: custEmail, name: custName }, 
+               data, 
+               newTime, 
+               requesterName
+             );
+           }
+           
+           // Notify Worker
+           if (data.workerEmail) {
+             window.EmailService.sendRescheduleRequest(
+               { email: data.workerEmail, name: data.workerName || 'Professional' }, 
+               data, 
+               newTime, 
+               requesterName
+             );
+           }
+        }
+
+        showToast('Reschedule request sent! ✓');
+        closeModal('modal-reschedule');
+      } catch (e) {
+        showToast('Error: ' + e.message);
+      }
+    }
+
+    async function handleRescheduleAction(id, action) {
+      try {
+        const bookingRef = db.collection('bookings').doc(id);
+        const doc = await bookingRef.get();
+        const data = doc.data();
+
+        if (action === 'accept') {
+          await bookingRef.update({
+            status: 'accepted',
+            scheduledAt: data.proposedTime,
+            proposedTime: firebase.firestore.FieldValue.delete(),
+            rescheduledBy: firebase.firestore.FieldValue.delete()
+          });
+          showToast('New time confirmed! ✓');
+          
+          if (window.EmailService) {
+            const custEmail = data.clientEmail || (currentUser.uid === data.clientId ? currentUser.email : null);
+            const custName = data.clientName || (currentUser.uid === data.clientId ? (currentUser.displayName || currentUser.email.split('@')[0]) : 'Customer');
+            if (custEmail) {
+              window.EmailService.sendRescheduleConfirmation({ email: custEmail, name: custName }, data, data.proposedTime);
+            }
+            if (data.workerEmail) {
+              window.EmailService.sendRescheduleConfirmation({ email: data.workerEmail, name: data.workerName || 'Professional' }, data, data.proposedTime);
+            }
+          }
+        } else {
+          await bookingRef.update({
+            status: 'accepted',
+            proposedTime: firebase.firestore.FieldValue.delete(),
+            rescheduledBy: firebase.firestore.FieldValue.delete()
+          });
+          showToast('Reschedule request declined.');
+          
+          if (window.EmailService) {
+            const custEmail = data.clientEmail || (currentUser.uid === data.clientId ? currentUser.email : null);
+            const custName = data.clientName || (currentUser.uid === data.clientId ? (currentUser.displayName || currentUser.email.split('@')[0]) : 'Customer');
+            if (custEmail) {
+              window.EmailService.sendRescheduleDeclined({ email: custEmail, name: custName }, data);
+            }
+            if (data.workerEmail) {
+              window.EmailService.sendRescheduleDeclined({ email: data.workerEmail, name: data.workerName || 'Professional' }, data);
+            }
+          }
+        }
+      } catch (e) {
+        showToast('Error: ' + e.message);
+      }
+    }
+
+    (async () => {
+      try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await auth.signInWithCustomToken(__initial_auth_token);
+        }
+      } catch (e) { }
+    })();
+  </script>
+</body>
+
+</html>

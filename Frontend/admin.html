@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>
+    (function () {
+      const t = localStorage.getItem('theme') || 'system';
+      if (t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW registration failed: ', err));
+        });
+      }
+    })();
+  </script>
+  <title>FixHub — Admin Portal</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#18181b">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FixHub Admin">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #18181b;
+      --bg: #ffffff;
+      --surface: #ffffff;
+      --surface-2: #f4f4f5;
+      --border: #e4e4e7;
+      --text: #09090b;
+      --text-2: #52525b;
+      --text-3: #a1a1aa;
+      --white: #ffffff;
+      --radius: 12px;
+      --radius-sm: 8px;
+
+      --blue: #2563eb; --blue-bg: #eff6ff;
+      --green: #16a34a; --green-bg: #f0fdf4;
+      --yellow: #ca8a04; --yellow-bg: #fefce8;
+      --red: #dc2626; --red-bg: #fef2f2;
+    }
+
+    [data-theme="dark"] {
+      --bg: #09090b;
+      --surface: #09090b;
+      --surface-2: #18181b;
+      --border: #27272a;
+      --text: #fafafa;
+      --text-2: #a1a1aa;
+      --text-3: #52525b;
+      
+      --blue-bg: rgba(37, 99, 235, 0.1);
+      --green-bg: rgba(22, 163, 74, 0.1);
+      --yellow-bg: rgba(202, 138, 4, 0.1);
+      --red-bg: rgba(220, 38, 38, 0.1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+    body { background: var(--bg); color: var(--text); line-height: 1.6; overflow-x: hidden; }
+
+    .loader {
+      width: 24px; height: 24px;
+      border: 2px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #loading {
+      position: fixed; inset: 0; background: var(--bg);
+      display: flex; align-items: center; justify-content: center; z-index: 9999;
+    }
+
+    #app { display: none; min-height: 100vh; flex-direction: row; }
+    #app.visible { display: flex; }
+
+    #auth-gate {
+      display: none; position: fixed; inset: 0; background: var(--bg);
+      z-index: 2000; align-items: center; justify-content: center;
+    }
+    #auth-gate.visible { display: flex; }
+
+    .auth-box {
+      background: var(--surface);
+      width: 100%; max-width: 400px;
+      padding: 48px; border-radius: var(--radius);
+      border: 1px solid var(--border);
+      animation: fadeIn 0.4s ease-out;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 20px; border-radius: var(--radius-sm);
+      font-size: 0.9rem; font-weight: 500; cursor: pointer;
+      border: 1px solid transparent; transition: all 0.1s;
+    }
+    .btn-primary { background: var(--primary); color: var(--white); }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-outline { background: transparent; color: var(--text); border-color: var(--border); }
+    .btn-outline:hover { background: var(--surface-2); }
+    .btn-full { width: 100%; justify-content: center; }
+    .btn-sm { padding: 4px 10px; font-size: 0.75rem; }
+
+    .sidebar {
+      width: 260px; height: 100vh;
+      background: var(--surface); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; position: sticky; top: 0;
+    }
+    .sidebar-head { padding: 32px 24px; border-bottom: 1px solid var(--border); }
+    .logo { font-size: 1.25rem; font-weight: 700; color: var(--text); text-decoration: none; }
+    .logo span { color: var(--text-3); font-weight: 400; }
+
+    .sidebar-nav { padding: 16px; flex: 1; }
+    .nav-link {
+      display: flex; align-items: center; gap: 12px; width: 100%;
+      padding: 10px 12px; margin-bottom: 4px; border: none; background: transparent;
+      color: var(--text-2); font-weight: 500; font-size: 0.9rem; border-radius: var(--radius-sm);
+      cursor: pointer; transition: none;
+    }
+    .nav-link:hover { background: var(--surface-2); color: var(--text); }
+    .nav-link.active { background: var(--surface-2); color: var(--text); font-weight: 600; }
+
+    .nav-badge { margin-left: auto; color: var(--red); font-size: 0.75rem; font-weight: 700; }
+
+    .main { flex: 1; padding: 48px; overflow-y: auto; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+    #topbar-title { font-size: 1.5rem; font-weight: 700; color: var(--text); }
+
+    .section { display: none; animation: fadeIn 0.3s ease-out; }
+    .section.active { display: block; }
+
+    .theme-toggle {
+      width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; border-radius: var(--radius-sm); border: 1px solid var(--border); color: var(--text-2);
+      transition: all 0.2s;
+    }
+    .theme-toggle:hover { background: var(--surface-2); color: var(--text); }
+    .theme-toggle .icon-sun { display: none; }
+    .theme-toggle .icon-moon { display: block; }
+    [data-theme="dark"] .theme-toggle .icon-sun { display: block; }
+    [data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .stat-box { background: var(--surface); padding: 24px; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+    .sb-label { font-size: 0.8rem; font-weight: 500; color: var(--text-3); text-transform: uppercase; margin-bottom: 4px; }
+    .sb-value { font-size: 1.75rem; font-weight: 700; color: var(--text); }
+
+    .card { background: var(--surface); border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 32px; overflow: hidden; }
+    .card-header { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .card-header h2 { font-size: 1rem; font-weight: 700; color: var(--text); }
+
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 12px 24px; font-weight: 600; color: var(--text-3); font-size: 0.75rem; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+    td { padding: 16px 24px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+    tr:last-child td { border-bottom: none; }
+
+    .badge { display: inline-flex; padding: 4px 10px; border-radius: 99px; font-size: 0.7rem; font-weight: 600; }
+    .status-pending { background: var(--yellow-bg); color: var(--yellow); }
+    .status-accepted { background: var(--blue-bg); color: var(--blue); }
+    .status-completed { background: var(--green-bg); color: var(--green); }
+    .status-cancelled { background: var(--red-bg); color: var(--red); }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.1); display: none; align-items: center; justify-content: center; z-index: 3000; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--surface); width: 95%; max-width: 500px; padding: 32px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+
+    .detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .detail-label { color: var(--text-3); font-size: 0.85rem; }
+    .detail-value { font-weight: 600; font-size: 0.85rem; }
+
+    .pass-container { position: relative; }
+    .pass-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; opacity: 0.5; }
+
+    @media (max-width: 1024px) {
+      .sidebar { display: none; }
+      .main { padding: 24px; }
+      th:nth-child(n+4), td:nth-child(n+4) { display: none; }
+    }
+
+  </style>
+</head>
+
+<body>
+  <div id="loading">
+    <div class="loader"></div>
+  </div>
+  <div id="toast"></div>
+
+  <div id="auth-gate">
+    <div style="position: absolute; top: 20px; left: 20px;">
+      <a href="index.html" class="btn btn-outline" style="text-decoration: none;">
+        ← Back to Home
+      </a>
+    </div>
+    <div style="position: absolute; top: 20px; right: 20px;">
+      <div class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+        <span class="icon-sun">☀️</span>
+        <span class="icon-moon">🌙</span>
+      </div>
+    </div>
+    <div class="auth-box">
+      <h1 id="admin-auth-title" style="margin-bottom: 8px">Admin Portal</h1>
+      <p id="admin-auth-sub" style="margin-bottom: 24px; color: var(--text-3)">Please sign in to continue.</p>
+      <div style="margin-bottom: 16px">
+        <label style="display:block; font-size:.8rem; margin-bottom:4px">Email</label>
+        <input type="email" id="admin-email"
+          style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px">
+      </div>
+      <div style="margin-bottom: 24px">
+        <label style="display:block; font-size:.8rem; margin-bottom:4px">Password</label>
+        <div class="pass-container">
+          <input type="password" id="admin-pass"
+            style="width:100%; padding:10px 40px 10px 10px; border:1px solid var(--border); border-radius:8px">
+          <span class="pass-toggle" onclick="togglePassVisibility('admin-pass', this)">👁️</span>
+        </div>
+      </div>
+      <div style="text-align:right; margin-bottom:16px">
+        <a href="#" style="font-size:0.8rem; color:var(--text-3); text-decoration:none;" onclick="event.preventDefault();resetAdminPassword()">Forgot password?</a>
+      </div>
+      <button class="btn btn-primary btn-full" id="admin-auth-btn" onclick="adminAuthAction()">Sign In</button>
+      
+      <div style="display: flex; align-items: center; gap: 12px; margin: 20px 0; color: var(--text-3); font-size: 0.8rem;">
+        <hr style="flex: 1; border: 0; border-top: 1px solid var(--border);">
+        <span>OR</span>
+        <hr style="flex: 1; border: 0; border-top: 1px solid var(--border);">
+      </div>
+
+      <button class="btn btn-outline btn-full" onclick="googleAdminAuthAction()">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18">
+        Sign in with Google
+      </button>
+
+      <p style="text-align:center;margin-top:24px;font-size:.8rem;color:var(--text-3)">
+        <span id="admin-switch-text">Don't have an admin account?</span>
+        <a href="#" style="color:var(--text);font-weight:500" onclick="event.preventDefault();toggleAdminAuthMode()"
+          id="admin-switch-link">Sign Up</a>
+      </p>
+    </div>
+  </div>
+
+  <div id="app">
+    <div style="display:flex; flex:1">
+      <aside class="sidebar">
+        <div class="sidebar-head"><a href="#" class="logo">Fix<span>Hub</span> Admin</a></div>
+        <nav class="sidebar-nav">
+          <button class="nav-link active" id="btn-nav-dashboard" onclick="showSection('dashboard')">📊 Dashboard</button>
+          <button class="nav-link" id="btn-nav-users" onclick="showSection('users')">👥 Users</button>
+          <button class="nav-link" id="btn-nav-bookings" onclick="showSection('bookings')">💼 Bookings</button>
+          <button class="nav-link" id="btn-nav-complaints" onclick="showSection('complaints')">⚠️ Complaints <span class="nav-badge"
+              id="nb-complaints" style="display:none">0</span></button>
+          <button class="nav-link" id="btn-nav-billing" onclick="showSection('billing')">💳 Billing History</button>
+        </nav>
+      </aside>
+      <main class="main">
+        <div class="topbar">
+          <div id="topbar-title">Dashboard</div>
+          <div style="display:flex; align-items:center; gap:12px">
+            <div class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+              <span class="icon-sun">☀️</span>
+              <span class="icon-moon">🌙</span>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="adminSignOut()">Sign Out</button>
+          </div>
+        </div>
+
+        <div class="section active" id="section-dashboard">
+          <div class="stats-grid">
+            <div class="stat-box">
+              <div class="sb-label">Users</div>
+              <div class="sb-value" id="s-users">0</div>
+            </div>
+            <div class="stat-box">
+              <div class="sb-label">Bookings</div>
+              <div class="sb-value" id="s-bookings">0</div>
+            </div>
+            <div class="stat-box">
+              <div class="sb-label">Open Complaints</div>
+              <div class="sb-value" id="s-complaints">0</div>
+            </div>
+          </div>
+        </div>
+ 
+        <div class="section" id="section-users">
+          <div class="card">
+            <div class="card-header">
+              <h2>User Management</h2>
+              <div style="display:flex; gap:8px">
+                 <select id="filter-user-role" onchange="renderUsers()" style="font-size:.7rem; padding:4px">
+                    <option value="all">All Roles</option>
+                    <option value="user">Customers</option>
+                    <option value="worker">Workers</option>
+                 </select>
+              </div>
+            </div>
+            <div class="card-body">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Icon</th>
+                    <th>Name / Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="users-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+ 
+        <div class="section" id="section-bookings">
+          <div class="card">
+            <div class="card-header">
+              <h2>Booking Management</h2>
+              <select id="filter-booking-status" onchange="renderBookings()" style="font-size:.7rem; padding:4px">
+                <option value="all">All Bookings</option>
+                <option value="pending">Pending</option>
+                <option value="accepted">Accepted</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+            <div class="card-body">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>Customer</th>
+                    <th>Worker</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="bookings-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+ 
+        <div class="section" id="section-complaints">
+          <div class="card">
+            <div class="card-header">
+              <h2>Customer Complaints</h2>
+            </div>
+            <div class="card-body">
+              <table>
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Category</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="complaints-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="section" id="section-billing">
+          <div class="stats-grid">
+            <div class="stat-box">
+              <div class="sb-label">Total Revenue</div>
+              <div class="sb-value" id="s-rev-total">₹0</div>
+            </div>
+            <div class="stat-box">
+              <div class="sb-label">Platform Fees (15%)</div>
+              <div class="sb-value" id="s-rev-fees">₹0</div>
+            </div>
+            <div class="stat-box">
+              <div class="sb-label">Jobs Paid</div>
+              <div class="sb-value" id="s-rev-count">0</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2>Billing History</h2>
+              <div style="display:flex; gap:12px; align-items:center;">
+                <label style="font-size:0.7rem; color:var(--text-3)">From:</label>
+                <input type="date" id="bill-start" onchange="renderBilling()" style="font-size:0.7rem; padding:4px">
+                <label style="font-size:0.7rem; color:var(--text-3)">To:</label>
+                <input type="date" id="bill-end" onchange="renderBilling()" style="font-size:0.7rem; padding:4px">
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="table-wrapper" style="overflow-x:auto">
+                <table style="min-width: 1000px">
+                  <thead>
+                    <tr>
+                      <th>Receipt ID</th>
+                      <th>Customer</th>
+                      <th>Worker</th>
+                      <th>Service</th>
+                      <th>Amount</th>
+                      <th>Plat. Fee</th>
+                      <th>Worker Earn</th>
+                      <th>Method</th>
+                      <th>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody id="billing-table-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-complaint">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal('modal-complaint')">✕</button>
+      <h2>Complaint Details</h2>
+      <div id="cm-content" style="margin: 20px 0"></div>
+      <div id="cm-actions" style="display:flex; gap:10px"></div>
+    </div>
+  </div>
+
+  <script src="email-service.js?v=1.1.2"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="error-handler.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "YOUR_FIREBASE_API_KEY",
+      authDomain: "fixhub-2411.firebaseapp.com",
+      projectId: "fixhub-2411",
+      storageBucket: "fixhub-2411.firebasestorage.app",
+      messagingSenderId: "122871478979",
+      appId: "1:122871478979:web:5e4d1920c8dc47dcfe0076"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+     const ADMIN_EMAILS = ['fazaljuvekar.54@gmail.com'];
+    let allComplaints = [], allUsers = [], allBookings = [], allReceipts = [];
+    let isAdminSignUp = false;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('admin-email').value = ADMIN_EMAILS[0];
+    });
+
+    auth.onAuthStateChanged(user => {
+      document.getElementById('loading').style.display = 'none';
+      if (user) {
+        if (ADMIN_EMAILS.map(e => e.toLowerCase()).includes(user.email.toLowerCase())) {
+          document.getElementById('auth-gate').classList.remove('visible');
+          document.getElementById('app').classList.add('visible');
+          loadAll();
+        } else {
+          alert('Access Denied: ' + user.email + ' is not an authorized administrator.');
+          auth.signOut();
+        }
+      } else {
+        document.getElementById('auth-gate').classList.add('visible');
+        document.getElementById('app').classList.remove('visible');
+      }
+    });
+
+    function toggleAdminAuthMode() {
+      isAdminSignUp = !isAdminSignUp;
+      document.getElementById('admin-auth-title').textContent = isAdminSignUp ? 'Setup Admin' : 'Admin Portal';
+      document.getElementById('admin-auth-sub').textContent = isAdminSignUp ? 'Create your administrator account.' : 'Please sign in to continue.';
+      document.getElementById('admin-auth-btn').textContent = isAdminSignUp ? 'Create Account' : 'Sign In';
+      document.getElementById('admin-switch-text').textContent = isAdminSignUp ? 'Already have an account?' : "Don't have an admin account?";
+      document.getElementById('admin-switch-link').textContent = isAdminSignUp ? 'Sign In' : 'Sign Up';
+    }
+
+    async function adminAuthAction() {
+      const email = document.getElementById('admin-email').value.trim();
+      const pass = document.getElementById('admin-pass').value;
+      if (!email || !pass) return alert('Please fill in all fields.');
+
+      if (!ADMIN_EMAILS.map(e => e.toLowerCase()).includes(email.toLowerCase())) {
+        return alert('Error: This email address is not authorized for administration.');
+      }
+
+      try {
+        if (isAdminSignUp) {
+          await auth.createUserWithEmailAndPassword(email, pass);
+          alert('Admin account created successfully! ✓');
+        } else {
+          await auth.signInWithEmailAndPassword(email, pass);
+        }
+      } catch (e) { alert(e.message); }
+    }
+
+    async function googleAdminAuthAction() {
+      try {
+        await auth.signInWithPopup(googleProvider);
+      } catch (e) {
+        alert('Google Auth failed: ' + e.message);
+      }
+    }
+
+    async function resetAdminPassword() {
+      const email = document.getElementById('admin-email').value.trim();
+      if (!email) return alert('Please enter your email above to reset password.');
+      if (!ADMIN_EMAILS.map(e => e.toLowerCase()).includes(email.toLowerCase())) {
+        return alert('Error: This email address is not authorized for administration.');
+      }
+      try {
+        await auth.sendPasswordResetEmail(email);
+        alert('Password reset link sent to ' + email + '. Check your inbox!');
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+    function adminSignOut() { auth.signOut(); }
+
+    function loadAll() {
+      startComplaintListener();
+      db.collection('users').onSnapshot(snap => {
+        allUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        document.getElementById('s-users').textContent = snap.size;
+        renderUsers();
+      });
+      db.collection('bookings').onSnapshot(snap => {
+        allBookings = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        document.getElementById('s-bookings').textContent = snap.size;
+        renderBookings();
+      });
+      db.collection('receipts').orderBy('paidAt', 'desc').onSnapshot(snap => {
+        allReceipts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderBilling();
+      });
+    }
+
+    function startComplaintListener() {
+      db.collection('complaints').orderBy('createdAt', 'desc').onSnapshot(snap => {
+        allComplaints = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const open = allComplaints.filter(c => !c.resolved).length;
+        document.getElementById('nb-complaints').textContent = open;
+        document.getElementById('nb-complaints').style.display = open ? 'inline-flex' : 'none';
+        document.getElementById('s-complaints').textContent = open;
+        renderComplaints();
+      });
+    }
+
+    function renderUsers() {
+      const roleFilter = document.getElementById('filter-user-role').value;
+      const filtered = allUsers.filter(u => roleFilter === 'all' || u.role === roleFilter);
+      const tbody = document.getElementById('users-table-body');
+      tbody.innerHTML = filtered.map(u => `
+        <tr>
+          <td><div class="user-avatar" style="width:30px;height:30px;font-size:.7rem">${(u.name || 'U').charAt(0)}</div></td>
+          <td>
+            <div style="font-weight:600">${u.name || 'Unnamed'}</div>
+            <div style="font-size:.7rem;color:var(--text-3)">${u.email}</div>
+          </td>
+          <td>
+            ${ADMIN_EMAILS.map(e => e.toLowerCase()).includes((u.email||'').toLowerCase())
+              ? `<span style="text-transform:capitalize;color:var(--blue);font-weight:700">Admin</span>`
+              : `<span style="text-transform:capitalize">${u.role === 'user' ? 'Customer' : (u.role || 'user')}</span>${u.role === 'worker' && u.verified ? ' <span style="color:var(--green)">✓</span>' : ''}`
+            }
+          </td>
+          <td><span class="badge ${u.suspended ? 'badge-open' : 'badge-resolved'}">${u.suspended ? 'Suspended' : 'Active'}</span></td>
+          <td>
+            <div style="display:flex;gap:4px">
+              <button class="btn btn-outline btn-sm" onclick="toggleSuspension('${u.id}', ${!!u.suspended})">${u.suspended ? 'Activate' : 'Suspend'}</button>
+              ${u.role === 'worker' ? `<button class="btn btn-outline btn-sm" onclick="toggleVerification('${u.id}', ${!!u.verified})">${u.verified ? 'Unverify' : 'Verify'}</button>` : ''}
+              <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);border:none" onclick="deleteUser('${u.id}', '${(u.name||'User').replace(/'/g,'')}')" title="Remove from Firestore">🗑️</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderBookings() {
+      const statusFilter = document.getElementById('filter-booking-status').value;
+      const filtered = allBookings.filter(b => statusFilter === 'all' || b.status === statusFilter);
+      const tbody = document.getElementById('bookings-table-body');
+      tbody.innerHTML = filtered.map(b => `
+        <tr>
+          <td style="text-transform:capitalize;font-weight:500">${b.type}</td>
+          <td>${b.clientName || 'N/A'}</td>
+          <td>${b.workerName || 'Not assigned'}</td>
+          <td><span class="badge status-${b.status}">${b.status}</span></td>
+          <td>${new Date(b.createdAt?.toDate?.() || Date.now()).toLocaleDateString()}</td>
+          <td><button class="btn btn-outline btn-sm" onclick="openBookingManager('${b.id}')">Manage</button></td>
+        </tr>
+      `).join('');
+    }
+
+    function renderComplaints() {
+      const tbody = document.getElementById('complaints-table-body');
+      tbody.innerHTML = allComplaints.map(c => `
+        <tr>
+          <td>${c.userName || 'User'}</td>
+          <td>${c.category}</td>
+          <td><span class="badge ${c.resolved ? 'badge-resolved' : 'badge-open'}">${c.resolved ? 'Resolved' : 'Open'}</span></td>
+          <td>${new Date(c.createdAt?.toDate?.() || Date.now()).toLocaleDateString()}</td>
+          <td><button class="btn btn-outline btn-sm" onclick="openComplaintModal('${c.id}')">View</button></td>
+        </tr>
+      `).join('');
+    }
+
+    function renderBilling() {
+      const start = document.getElementById('bill-start').value;
+      const end = document.getElementById('bill-end').value;
+      
+      let filtered = allReceipts;
+      if (start) {
+        const startDate = new Date(start);
+        startDate.setHours(0,0,0,0);
+        filtered = filtered.filter(r => (r.paidAt?.toDate?.() || 0) >= startDate);
+      }
+      if (end) {
+        const endDate = new Date(end);
+        endDate.setHours(23,59,59,999);
+        filtered = filtered.filter(r => (r.paidAt?.toDate?.() || 0) <= endDate);
+      }
+
+      let totalRev = 0, totalFees = 0;
+      const tbody = document.getElementById('billing-table-body');
+      tbody.innerHTML = filtered.map(r => {
+        totalRev += r.amount || 0;
+        totalFees += r.platformFee || 0;
+        const date = r.paidAt?.toDate?.() ? new Date(r.paidAt.toDate()).toLocaleString() : 'N/A';
+        return `
+          <tr>
+            <td style="font-family:monospace; font-size:0.75rem">${r.receiptId}</td>
+            <td>${r.customerName}</td>
+            <td>${r.workerName}</td>
+            <td>${r.serviceType}</td>
+            <td style="font-weight:600">₹${r.amount}</td>
+            <td style="color:var(--blue)">₹${r.platformFee}</td>
+            <td style="color:var(--green)">₹${r.workerEarning}</td>
+            <td style="text-transform:capitalize">${r.paymentMethod}</td>
+            <td style="font-size:0.75rem">${date}</td>
+          </tr>
+        `;
+      }).join('');
+
+      document.getElementById('s-rev-total').textContent = '₹' + totalRev.toLocaleString();
+      document.getElementById('s-rev-fees').textContent = '₹' + totalFees.toLocaleString();
+      document.getElementById('s-rev-count').textContent = filtered.length;
+    }
+
+    function openComplaintModal(id) {
+      const c = allComplaints.find(x => x.id === id);
+      if (!c) return;
+      document.getElementById('cm-content').innerHTML = `
+        <div class="detail-row"><span class="detail-label">User</span><span class="detail-value">${c.userName}</span></div>
+        <div class="detail-row"><span class="detail-label">Category</span><span class="detail-value">${c.category}</span></div>
+        <div class="detail-row"><span class="detail-label">Message</span><span class="detail-value">${c.message}</span></div>
+        <div class="detail-row"><span class="detail-label">Client ID</span><span class="detail-value" style="font-size:10px">${c.userId}</span></div>
+        ${c.adminNote ? `<div style="margin-top:16px; padding:12px; background:var(--surface); border-radius:8px">
+          <div style="font-size:10px; color:var(--text-3); text-transform:uppercase; margin-bottom:4px">Admin Response</div>
+          <div style="font-size:13px">${c.adminNote}</div>
+        </div>` : ''}
+        ${!c.resolved ? `
+          <div style="margin-top:20px">
+            <label style="display:block; font-size:12px; color:var(--text-3); margin-bottom:6px">Resolution Response</label>
+            <textarea id="complaint-response" placeholder="Explain how the issue was resolved..." style="width:100%; min-height:100px; padding:12px; font-size:13px"></textarea>
+          </div>
+        ` : ''}
+        ${c.mediaUrls ? `<div class="complaint-images">${c.mediaUrls.map(u => `<img src="${u}" onclick="window.open(this.src)">`).join('')}</div>` : ''}
+      `;
+      document.getElementById('cm-actions').innerHTML = `
+        ${!c.resolved ? `<button class="btn btn-success btn-sm" onclick="resolveComplaint('${id}')">Mark as Resolved</button>` : ''}
+        <button class="btn btn-outline btn-sm" onclick="closeModal('modal-complaint')">Close</button>
+      `;
+      openModal('modal-complaint');
+    }
+
+    async function resolveComplaint(id) {
+      const note = document.getElementById('complaint-response').value;
+      if (!note) {
+        if (!confirm('Resolve without a response note?')) return;
+      }
+      
+      await db.collection('complaints').doc(id).update({ 
+        resolved: true, 
+        adminNote: note || 'Issue resolved by administration.' 
+      });
+
+      // Notify User via Email
+      const c = allComplaints.find(x => x.id === id);
+      if (window.EmailService && c.userEmail) {
+        window.EmailService.sendComplaintResolved({ name: c.userName, email: c.userEmail }, c, note);
+      }
+
+      showToast('Complaint resolved ✓');
+      closeModal('modal-complaint');
+    }
+
+    function showSection(id) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+      document.getElementById('section-' + id).classList.add('active');
+      document.getElementById('btn-nav-' + id).classList.add('active');
+      document.getElementById('topbar-title').textContent = id.charAt(0).toUpperCase() + id.slice(1);
+    }
+
+    async function toggleSuspension(uid, current) {
+      if (!confirm(`Are you sure you want to ${current ? 'activate' : 'suspend'} this user?`)) return;
+      await db.collection('users').doc(uid).update({ suspended: !current });
+      showToast(current ? 'User activated ✓' : 'User suspended ✓');
+    }
+
+    async function toggleVerification(uid, current) {
+      await db.collection('users').doc(uid).update({ verified: !current });
+      showToast(current ? 'Worker unverified ✓' : 'Worker verified ✓');
+    }
+
+    async function deleteUser(uid, name) {
+      if (!confirm(`Remove "${name}" from the system? This deletes their Firestore profile but does NOT delete their login account.`)) return;
+      await db.collection('users').doc(uid).delete();
+      showToast('User record removed ✓');
+    }
+
+    async function openBookingManager(id) {
+       const b = allBookings.find(x => x.id === id);
+       const status = prompt(`Update status for ${b.type} (${b.id}):\npending, accepted, completed, cancelled`, b.status);
+       
+       if (status && ['pending', 'accepted', 'completed', 'cancelled'].includes(status)) {
+         if (status === b.status) return;
+         
+         await db.collection('bookings').doc(id).update({ status: status });
+         showToast('Booking updated ✓');
+
+         // Handle Cancellation Email
+         if (status === 'cancelled' && window.EmailService) {
+            // Notify Customer
+            if (b.clientEmail) {
+                window.EmailService.sendBookingCancellation(
+                    { name: b.clientName || 'Customer', email: b.clientEmail },
+                    b,
+                    id,
+                    'Administration'
+                );
+            }
+            // Notify Worker if assigned
+            if (b.workerEmail) {
+                window.EmailService.sendBookingCancellation(
+                    { name: b.workerName || 'Professional', email: b.workerEmail },
+                    b,
+                    id,
+                    'Administration'
+                );
+            }
+         }
+       }
+    }
+
+    function openModal(id) { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+    function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+    }
+
+    function togglePassVisibility(id, el) {
+      const input = document.getElementById(id);
+      if (input.type === 'password') {
+        input.type = 'text';
+        el.textContent = '👁️‍🗨️';
+      } else {
+        input.type = 'password';
+        el.textContent = '👁️';
+      }
+    }
+  </script>
+</body>
+
+</html>

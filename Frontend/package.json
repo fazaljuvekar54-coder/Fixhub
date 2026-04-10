@@ -1,0 +1,16 @@
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "description": "FixHub is a comprehensive web platform connecting customers with verified professionals for various trades including electricians, plumbers, mechanics, carpenters, and HVAC specialists. Built with modern web technologies and Firebase for seamless authentication and data management.",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
+  }
+}
